@@ -1,0 +1,17 @@
+/**
+ * 4-bit CLA.
+ * Author: Naga Kandasamy
+ * Date created: June 29, 2020
+ * Date modified: September 12, 2021
+ * 
+ * Student name(s): 
+ * Date modified: 
+ */
+
+CHIP CLA4 {
+    IN x[4], y[4], cin;     // 4-bit inputs
+    OUT z[4], cout;         // 4-bit output, 1 carry out bit
+
+    PARTS: 
+    // FIXME: provide your solution
+}
