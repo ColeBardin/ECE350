@@ -4,8 +4,8 @@
  * Date created: June 29, 2020
  * Date modified: September 12, 2021
  * 
- * Student name(s):
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 7/6/23
  */
 
 CHIP FullAdder {
@@ -13,5 +13,12 @@ CHIP FullAdder {
     OUT z, cout;   // Outputs: z_i and c_i
 
     PARTS:
-    // FIXME: provide your solution
+    // Z 
+    Xor(a=x, b=y, out=XxorY); // x ^ y
+    Xor(a=XxorY, b=cin, out=z); // z = x ^ y ^ cin
+
+    // Cout
+    And(a=x, b=y, out=XandY); // x & y
+    And(a=XxorY, b=cin, out=XxorYandCI); // (x ^ y) & cin
+    Or(a=XxorYandCI, b=XandY, out=cout); // x & y + (x ^ y) & cin
 }

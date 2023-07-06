@@ -4,8 +4,8 @@
  * Date created: June 29, 2020
  * Date modified: September 12, 2021
  * 
- * Student name(s): 
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 7/6/23
  */
 
 CHIP RippleCarryAdder4 {
@@ -13,5 +13,9 @@ CHIP RippleCarryAdder4 {
     OUT z[4], cout;         // 4-bit output, 1 carry out bit
 
     PARTS: 
-    // FIXME: provide your solution
+    // Connect 4 Full Adders sequentially
+    FullAdder(x=x[0], y=y[0], cin=cin, z=z[0], cout=FA0cout);
+    FullAdder(x=x[1], y=y[1], cin=FA0cout, z=z[1], cout=FA1cout);
+    FullAdder(x=x[2], y=y[2], cin=FA1cout, z=z[2], cout=FA2cout);
+    FullAdder(x=x[3], y=y[3], cin=FA2cout, z=z[3], cout=cout);
 }

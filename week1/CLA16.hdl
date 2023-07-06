@@ -4,8 +4,8 @@
  * Date created: July 9, 2020
  * Date modified: September 12, 2021
  * 
- * Student name(s): 
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 7/6/23
  */
 
  CHIP CLA16 {
@@ -13,5 +13,9 @@
     OUT z[16];          //  16-bit output
 
     PARTS: 
-    // FIXME: provide your solution
+    // Sequentially connect 4 4-bit CLAs
+    CLA4(x=x[0..3], y=y[0..3], cin=false, z=z[0..3], cout=CLA0cout);
+    CLA4(x=x[4..7], y=y[4..7], cin=CLA0cout, z=z[4..7], cout=CLA1cout);
+    CLA4(x=x[8..11], y=y[8..11], cin=CLA1cout, z=z[8..11], cout=CLA2cout);
+    CLA4(x=x[12..15], y=y[12..15], cin=CLA2cout, z=z[12..15], cout=false);
 }

@@ -4,8 +4,8 @@
  * Date created: July 9, 2020
  * Date modified: September 12, 2021
  * 
- * Student name(s): 
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 7/6/23
  */
 
  CHIP RippleCarryAdder16 {
@@ -13,5 +13,9 @@
     OUT z[16];          //  16-bit output
 
     PARTS: 
-    // FIXME: provide your solution
-}
+    // Connect 4 4-bit Ripple Carry Adders sequentially
+    RippleCarryAdder4(x=x[0..3], y=y[0..3], cin=false, z=z[0..3], cout=RCA0cout);
+    RippleCarryAdder4(x=x[4..7], y=y[4..7], cin=RCA0cout, z=z[4..7], cout=RCA1cout);
+    RippleCarryAdder4(x=x[8..11], y=y[8..11], cin=RCA1cout, z=z[8..11], cout=RCA2cout);
+    RippleCarryAdder4(x=x[12..15], y=y[12..15], cin=RCA2cout, z=z[12..15], cout=RCA3cout);
+ }

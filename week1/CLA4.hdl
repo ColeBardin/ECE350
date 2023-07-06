@@ -4,8 +4,8 @@
  * Date created: June 29, 2020
  * Date modified: September 12, 2021
  * 
- * Student name(s): 
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 7/6/23
  */
 
 CHIP CLA4 {
@@ -13,5 +13,46 @@ CHIP CLA4 {
     OUT z[4], cout;         // 4-bit output, 1 carry out bit
 
     PARTS: 
-    // FIXME: provide your solution
+    // Generate signals
+    And(a=x[0], b=y[0], out=g0);
+    And(a=x[1], b=y[1], out=g1);
+    And(a=x[2], b=y[2], out=g2);
+    And(a=x[3], b=y[3], out=g3);
+
+    // Propagate signals
+    Or(a=x[0], b=y[0], out=p0);
+    Or(a=x[1], b=y[1], out=p1);
+    Or(a=x[2], b=y[2], out=p2);
+    Or(a=x[3], b=y[3], out=p3);
+
+    // C0
+    And(a=p0, b=cin, out=p0cin); // p0cin
+    Or(a=g0, b=p0cin, out=c0); // g0 + p0cin
+    // C1
+    And(a=p1, b=p0cin, out=p1p0cin); // p1p0cin
+    And(a=p1, b=g0, out=p1g0); // p1g0
+    Or(a=p1g0, b=p1p0cin, out=p1g0ORp1p0cin); // p1g0 + p1p0cin
+    Or(a=g1, b=p1g0ORp1p0cin, out=c1); // g1 + p1g0 + p1p0cin
+    // C2
+    And(a=p2, b=p1p0cin, out=p2p1p0cin); // p2p1p0cin
+    And(a=p2, b=p1g0, out=p2p1g0); // p2p1g0
+    And(a=p2, b=g1, out=p2g1); // p2g1
+    Or(a=p2p1p0cin, b=p2p1g0, out=p2p1p0cinORp2p1g0); // p2p1g0 + p2p1p0cin 
+    Or(a=p2p1p0cinORp2p1g0, b=p2g1, out=p1p1p0cinORp2p1g0ORp2g1); // p2g1 + p2p1g0 + p2p1p0cin 
+    Or(a=g2, b=p1p1p0cinORp2p1g0ORp2g1, out=c2); // g2 + p2g1 + p2p1g0 + p2p1p0cin 
+    // C3
+    And(a=p3, b=p2p1p0cin, out=p3p2p1p0cin); // p3p2p1p0cin
+    And(a=p3, b=p2p1g0, out=p3p2p1g0); // p3p2p1g0
+    And(a=p3, b=p2g1, out=p3p2g1); // p3p2g1
+    And(a=p3, b=g2, out=p3g2); // p3g2
+    Or(a=p3p2p1p0cin, b=p3p2p1g0, out=p3p2p1p0cinORp3p2p1g0); // p3p2p1g0 + p3p2p1p0cin
+    Or(a=p3p2p1p0cinORp3p2p1g0, b=p3p2g1, out=p3p2p1p0cinORp3p2p1g0ORp3p2g1); // p3p2g1 + p3p2p1g0 + p3p2p1p0cin
+    Or(a=p3p2p1p0cinORp3p2p1g0ORp3p2g1, b=p3g2, out=p3p2p1p0cinORp3p2p1g0ORp3p2g1ORp3g2); // p3g2 + p3p2g1 + p3p2p1g0 + p3p2p1p0cin
+    Or(a=g3, b=p3p2p1p0cinORp3p2p1g0ORp3p2g1ORp3g2, out=cout); // g3 + p3g2 + p3p2g1 + p3p2p1g0 + p3p2p1p0cin
+
+    // Full Adders
+    FullAdder(x=x[0], y=y[0], cin=cin ,z=z[0], cout=false);
+    FullAdder(x=x[1], y=y[1], cin=c0,z=z[1], cout=false);
+    FullAdder(x=x[2], y=y[2], cin=c1,z=z[2], cout=false);
+    FullAdder(x=x[3], y=y[3], cin=c2,z=z[3], cout=false);
 }
