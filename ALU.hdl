@@ -27,8 +27,8 @@
  * Date created: July 10, 2020
  * Date modified: July 1, 2023
  * 
- * Name of student: FIXME
- * Date modified: 
+ * Name of student: Cole Bardin
+ * Date modified: 7/12/23
 */
 
 CHIP ALU {
@@ -47,5 +47,25 @@ CHIP ALU {
         ng;                 // 1 if (out < 0),  0 otherwise
 
     PARTS:
-    // TODO: complete the implementation of the ALU
+    // Preset inputs
+    Mux16(a=x, b=false, sel=zx, out=Xz); // zx input
+    Mux16(a=y, b=false, sel=zy, out=Yz); // zy input
+    Not16(in=Xz, out=NXz); // not X
+    Not16(in=Yz, out=NYz); // not Y
+    Mux16(a=Xz, b=NXz, sel=nx, out=Xzn); // nx input
+    Mux16(a=Yz, b=NYz, sel=ny, out=Yzn); // ny input
+
+    // ALU Operation
+    And16(a=Xzn, b=Yzn, out=XandY); // X&Y
+    Add16(a=Xzn, b=Yzn, out=XplusY); // X+Y
+    Mux16(a=XandY, b=XplusY, sel=f, out=ALUout); // f input
+
+    // Post-set ALU Output
+    Not16(in=ALUout, out=NALUout); // not ALU operation output
+    Mux16(a=ALUout, b=NALUout, sel=no, out=out, out[0..7]=lsb, out[8..15]=msb, out[15]=ng); // no input and ng output
+    // zr
+    Or8Way(in=lsb, out=outORlsb); // 8 way or of LSBs
+    Or8Way(in=msb, out=outORmsb); // 8 way or of MSBs
+    Or(a=outORlsb, b=outORmsb, out=Nzr); // Or LSBs and MSBs, 1 if output is NOT zero
+    Not(in=Nzr, out=zr); // zr output
 }
