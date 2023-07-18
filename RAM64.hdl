@@ -7,8 +7,8 @@
  * Author: Naga Kandasamy
  * Date created: July 12, 2020
 
- * Student name(s): TODO
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 7/17/2023
  *
  * Notes: Hardware project from the book "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
  */
@@ -24,5 +24,18 @@ CHIP RAM64 {
        Use mux/demux logic to effect this addressing scheme.
 */
     PARTS:
+    // Demux the 3 MSBs of the address to select the RAM8 bank
+    DMux8Way(in=load, sel=address[3..5], a=l0, b=l1, c=l2, d=l3, e=l4, f=l5, g=l6, h=l7);
+    // Load the data into the desired RAM8 addressed at the 3 LSBs of the address in 
+    RAM8(in=in, load=l0, address=address[0..2], out=o0);
+    RAM8(in=in, load=l1, address=address[0..2], out=o1);
+    RAM8(in=in, load=l2, address=address[0..2], out=o2);
+    RAM8(in=in, load=l3, address=address[0..2], out=o3);
+    RAM8(in=in, load=l4, address=address[0..2], out=o4);
+    RAM8(in=in, load=l5, address=address[0..2], out=o5);
+    RAM8(in=in, load=l6, address=address[0..2], out=o6);
+    RAM8(in=in, load=l7, address=address[0..2], out=o7);
+    // Multiplex the RAM8 banks with the 3 MSBs of the address bits
+    Mux8Way16(a=o0, b=o1, c=o2, d=o3, e=o4, f=o5, g=o6, h=o7, sel=address[3..5], out=out);
     // TODO: complete your implementation of RAM64.
 }
