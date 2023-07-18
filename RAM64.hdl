@@ -1,0 +1,28 @@
+/**
+ * Memory of 64 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ * 
+ * Author: Naga Kandasamy
+ * Date created: July 12, 2020
+
+ * Student name(s): TODO
+ * Date modified: 
+ *
+ * Notes: Hardware project from the book "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
+ */
+
+CHIP RAM64 {
+    IN in[16], load, address[6];
+    OUT out[16];
+
+    /* Implementation tip: A larger RAM unit can be built by grouping smaller RAM-parts together.
+       Think about the RAM’s address input as consisting of two fields: 
+       one field can be used to select a RAM-part;
+       the other field can be used to select a register within that RAM-part
+       Use mux/demux logic to effect this addressing scheme.
+*/
+    PARTS:
+    // TODO: complete your implementation of RAM64.
+}

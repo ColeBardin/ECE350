@@ -1,0 +1,23 @@
+/**
+ * A 16-bit counter with load and reset control bits.
+ * if      (reset[t] == 1) out[t+1] = 0
+ * else if (load[t] == 1)  out[t+1] = in[t]
+ * else if (inc[t] == 1)   out[t+1] = out[t] + 1  (integer addition)
+ * else                    out[t+1] = out[t]
+ * 
+ * Author: Naga Kandasamy
+ * Date created: July 14, 2020
+ * 
+ * Student name(s): TODO
+ * Date modified: 
+ *
+ * Notes: Project from the book "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
+ */
+
+CHIP PC {
+    IN in[16],load,inc,reset;
+    OUT out[16];
+
+    PARTS:
+    // TODO: complete implementation of the 16-bit program counter.
+}
