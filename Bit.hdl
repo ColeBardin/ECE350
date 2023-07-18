@@ -8,8 +8,8 @@
  * Author: Naga Kandasamy
  * Date created: July 11, 2020
  * 
- * Student name(s): TODO 
- * Date modified:
+ * Student name(s): Cole Bardin
+ * Date modified: 7/17/2023
  */
 
 CHIP Bit {
@@ -17,6 +17,8 @@ CHIP Bit {
     OUT out;
 
     // Implementation tip: Can be built using a DFF and a multiplexer.
-    PARTS:
+    PARTS: 
+    Mux(a=outD, b=in, sel=load, out=data); // Multiplex input with existing data
+    DFF(in=data, out=outD, out=out); // Put data into DFF
     // Complete the implementation of the single-bit memory cell.
 }
