@@ -8,8 +8,8 @@
  * Author: Naga Kandasamy
  * Date created: July 14, 2020
  * 
- * Student name(s): TODO
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 7/17/2023
  *
  * Notes: Project from the book "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
  */
@@ -19,5 +19,10 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
+    Inc16(in=PC, out=PCp1); // PC+1
+    Mux16(a=PC, b=PCp1, sel=inc, out=dinc); // handle inc input
+    Mux16(a=dinc, b=in, sel=load, out=dload); // handle load input
+    Mux16(a=dload, b=false, sel=reset, out=data); // handle reset input
+    Register(in=data, load=true, out=PC, out=out); // store data into register
     // TODO: complete implementation of the 16-bit program counter.
 }
