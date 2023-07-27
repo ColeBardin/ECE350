@@ -1,4 +1,4 @@
-18 // Load Q
+@18 // Load Q
 M = 0 // Q = 0
 @16 // Load A
 D=M // D<-A
