@@ -1,4 +1,4 @@
-#include <instruction.h>
+#include "instruction.h"
 
 uint16_t build_ins(struct instruction *ins){
 	uint16_t bits = 0;

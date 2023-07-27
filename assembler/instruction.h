@@ -16,7 +16,6 @@ enum INS_TYPE {
 };
 
 enum VAL_TYPE {
-	VAL_NULL,
 	VAL_NUMERIC,
 	VAL_SYMBOL,
 };
@@ -80,3 +79,4 @@ struct instruction {
 };
 
 uint16_t build_ins(struct instruction *ins);
+
