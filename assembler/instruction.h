@@ -11,11 +11,11 @@
 enum INS_TYPE {
 	INS_A,
 	INS_C,
-	INS_J,
 	INS_P,
 };
 
 enum VAL_TYPE {
+	VAL_NULL,
 	VAL_NUMERIC,
 	VAL_SYMBOL,
 };
@@ -31,7 +31,7 @@ enum COMP_TYPE {
 	COMP_D_MINUS_AM = 0b010011,
 	COMP_D_OR_AM = 0b010101,
 	COMP_D_PLUS_1 = 0b011111,
-	COMP_ZERO = 0b101010,
+	COMP_0 = 0b101010,
 	COMP_AM = 0b110000,
 	COMP_NOT_AM,
 	COMP_AM_MINUS_1,
@@ -71,12 +71,18 @@ enum JMP_TYPE {
 struct instruction {
 	enum INS_TYPE ins_type;
 	enum VAL_TYPE val_type;
-	uint16_t val;
+	char val[64];
 	enum COMP_TYPE comp;
 	enum A_REG_SEL reg;
 	enum DEST_TYPE dest;
 	enum JMP_TYPE jmp;
 };
 
-uint16_t build_ins(struct instruction *ins);
+struct computation {
+	char dest[128];
+	char comp[128];
+	char jump[128];
+};
 
+uint16_t build_ins(struct instruction *ins);
+void build_comp(struct computation *cmp, struct instruction *ins);
