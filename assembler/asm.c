@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <string.h>
 #include "instruction.h"
-#include "insLL.h"
 
 int parse(FILE *fp, List *dest);
 int tokenize(char *line, List *list);
@@ -14,6 +13,8 @@ int main(int argc, char **argv){
 	List *list;
 	struct instruction *ins;
 	char *fnEXT;
+	int ic;
+	int offset;
 	
 	if(argc != 2){
 		exit(-1);
@@ -36,16 +37,13 @@ int main(int argc, char **argv){
 	
 	parse(fp, list);
 		
-	for(Node *n = list->head; n != NULL; n=n->next){
+	ic = 0;
+	offset = 0;
+	for(Node *n = list->head; n != NULL; n=n->next, ic++){
 		ins = n->data;
-		printf("\nIns Type: %d\n", ins->ins_type);
-		//printf("Val Type: %d\n", ins->val_type);
-		//printf("val: %s\n", ins->val);
-		printf("Comp Type: %d\n", ins->comp);
-		printf("Reg: %d\n", ins->reg);
-		//printf("Dest: %d\n", ins->dest);
-		//printf("Jmp: %d\n", ins->jmp);
-		printf("bytes: %d\n", build_ins(ins));
+		if(ins->val_type == VAL_SYMBOL && ins->ins_type == VAL_SYMBOL){
+			printf("ins: %d: %s\n", ic, ins->val);
+		}
 	} 
 
 	deleteList(list);

@@ -8,6 +8,19 @@
 #define DEST_SHIFT(x) (x<<3)
 #define JMP_SHIFT(x) (x)
 
+typedef struct List List;
+typedef struct Node Node;
+
+struct List {
+	Node *head;
+	Node *tail;
+};
+
+struct Node {
+	struct instruction *data;
+	Node *next;
+};
+
 enum INS_TYPE {
 	INS_A,
 	INS_C,
@@ -86,3 +99,8 @@ struct computation {
 
 uint16_t build_ins(struct instruction *ins);
 void build_comp(struct computation *cmp, struct instruction *ins);
+
+List *newList();
+int deleteList(List *list);
+int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp);
+
