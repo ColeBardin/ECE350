@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-const int Ncomps = 28;
-const int Nthresh = 17;
-const char *comp_strings[] = {"0", "1","-1","D","A","!D","!A","-D","-A","D+1","A+1","D-1","A-1","D+A","D-A","A-D","D&A","D|A","M","!M","-M","M+1","M-1","D+M","D-M","M-D","D&M","D|M"};
-const enum COMP_TYPE comp_bits[] = {COMP_0,COMP_1,COMP_NEG_1,COMP_D,COMP_AM,COMP_NOT_D,COMP_NOT_AM,COMP_NEG_D,COMP_NEG_AM,COMP_D_PLUS_1,COMP_AM_PLUS_1,COMP_D_MINUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM,COMP_AM,COMP_NOT_AM,COMP_NEG_AM,COMP_AM_PLUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM};
+const int numComps = 28;
+const int compThresh = 17;
+const char *compStrings[] = {"0", "1","-1","D","A","!D","!A","-D","-A","D+1","A+1","D-1","A-1","D+A","D-A","A-D","D&A","D|A","M","!M","-M","M+1","M-1","D+M","D-M","M-D","D&M","D|M"};
+const enum COMP_T compBits[] = {COMP_0,COMP_1,COMP_NEG_1,COMP_D,COMP_AM,COMP_NOT_D,COMP_NOT_AM,COMP_NEG_D,COMP_NEG_AM,COMP_D_PLUS_1,COMP_AM_PLUS_1,COMP_D_MINUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM,COMP_AM,COMP_NOT_AM,COMP_NEG_AM,COMP_AM_PLUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM};
 
-uint16_t build_ins(Instruction *ins){
+uint16_t buildIns(Instruction *ins){
 	uint16_t bits = 0;
 	int val;
 
@@ -27,7 +27,7 @@ uint16_t build_ins(Instruction *ins){
 	return bits;
 }
 
-void build_comp(Computation *cmp, Instruction *ins){
+void buildComp(Computation *cmp, Instruction *ins){
 	char *pos;
 	
 	ins->ins_type = INS_C;
@@ -49,10 +49,10 @@ void build_comp(Computation *cmp, Instruction *ins){
 	
 	// Find matching byte code for computation
 	pos = cmp->comp;
-	for(int i = 0; i < Ncomps; i++){
-		if(!strcmp(pos, comp_strings[i])){
-			ins->comp = comp_bits[i];
-			ins->reg = (i > Nthresh) ? A_REG_M : A_REG_A;
+	for(int i = 0; i < numComps; i++){
+		if(!strcmp(pos, compStrings[i])){
+			ins->comp = compBits[i];
+			ins->reg = (i > compThresh) ? REG_M : REG_A;
 		}
 	}
 
@@ -77,7 +77,7 @@ void build_comp(Computation *cmp, Instruction *ins){
 	}
 }
 
-InsList *newList(){
+InsList *newInsList(){
 	InsList *list;
 
 	list = malloc(sizeof(InsList));
@@ -89,7 +89,7 @@ InsList *newList(){
 	return list;	
 }
 
-int deleteList(InsList *list){
+int deleteInsList(InsList *list){
 	InsNode *c, *n;
 	if(list == NULL){
 		return -1;
@@ -108,7 +108,7 @@ int deleteList(InsList *list){
 	return 0;
 }
 
-int addInstruction(InsList *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp){
+int addInstruction(InsList *list, enum INS_T insType, enum VAL_T valType, char *val, enum COMP_T comp, enum REG_SEL reg, enum DEST_T dest, enum JMP_T jmp){
 	InsNode *node;
 	InsNode *p;
 

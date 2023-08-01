@@ -13,19 +13,19 @@ typedef struct InsNode InsNode;
 typedef struct Instruction Instruction;
 typedef struct Computation Computation;
 
-enum INS_TYPE {
+enum INS_T {
 	INS_A,
 	INS_C,
 	INS_P,
 };
 
-enum VAL_TYPE {
+enum VAL_T {
 	VAL_NULL,
 	VAL_NUMERIC,
 	VAL_SYMBOL,
 };
 
-enum COMP_TYPE {
+enum COMP_T {
 	COMP_D_AND_AM,
 	COMP_D_PLUS_AM = 0b000010,
 	COMP_AM_MINUS_D = 0b000111,
@@ -46,12 +46,12 @@ enum COMP_TYPE {
 	COMP_1 = 0b111111,
 };
 
-enum A_REG_SEL {
-	A_REG_A,
-	A_REG_M,
+enum REG_SEL {
+	REG_A,
+	REG_M,
 };
 
-enum DEST_TYPE {
+enum DEST_T {
 	DEST_NULL,
 	DEST_M,
 	DEST_D,
@@ -62,7 +62,7 @@ enum DEST_TYPE {
 	DEST_ADM,
 };
 
-enum JMP_TYPE {
+enum JMP_T {
 	JMP_NULL,
 	JMP_GT,
 	JMP_EQ,
@@ -84,13 +84,13 @@ struct InsNode {
 };
 
 struct Instruction {
-	enum INS_TYPE ins_type;
-	enum VAL_TYPE val_type;
+	enum INS_T ins_type;
+	enum VAL_T val_type;
 	char val[64];
-	enum COMP_TYPE comp;
-	enum A_REG_SEL reg;
-	enum DEST_TYPE dest;
-	enum JMP_TYPE jmp;
+	enum COMP_T comp;
+	enum REG_SEL reg;
+	enum DEST_T dest;
+	enum JMP_T jmp;
 };
 
 struct Computation {
@@ -99,10 +99,9 @@ struct Computation {
 	char jump[128];
 };
 
-uint16_t build_ins(Instruction *ins);
-void build_comp(Computation *cmp, Instruction *ins);
+uint16_t buildIns(Instruction *ins);
+void buildComp(Computation *cmp, Instruction *ins);
 
-InsList *newList();
-int deleteList(InsList *list);
-int addInstruction(InsList *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp);
-
+InsList *newInsList();
+int deleteInsList(InsList *list);
+int addInstruction(InsList *list, enum INS_T insType, enum VAL_T valType, char *val, enum COMP_T comp, enum REG_SEL reg, enum DEST_T dest, enum JMP_T jmp);

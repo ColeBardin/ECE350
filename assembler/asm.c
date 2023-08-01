@@ -30,7 +30,7 @@ int main(int argc, char **argv){
 		exit(-1);
 	}	
 
-	list = newList();
+	list = newInsList();
 	if(list == NULL){
 		exit(-1);
 	}	
@@ -46,7 +46,7 @@ int main(int argc, char **argv){
 		}
 	} 
 
-	deleteList(list);
+	deleteInsList(list);
 	exit(0);
 }
 
@@ -121,8 +121,8 @@ int tokenize(char *line, InsList *list){
 void determineCompute(char *line, InsList *list){
 	char *pos;
 	uint8_t a;
-	enum JMP_TYPE jmp;
-	enum COMP_TYPE cmp;
+	enum JMP_T jmp;
+	enum COMP_T cmp;
 	Computation comp;
 	Instruction ins;
 
@@ -156,7 +156,7 @@ void determineCompute(char *line, InsList *list){
 			break;
 		}
 	}
-	build_comp(&comp, &ins);
+	buildComp(&comp, &ins);
 	addInstruction(list, ins.ins_type, ins.val_type, ins.val, ins.comp, ins.reg, ins.dest, ins.jmp);
 }
 
