@@ -15,4 +15,4 @@ struct Node {
 
 List *newList();
 int deleteList(List *list);
-int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, uint16_t val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp);
+int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp);

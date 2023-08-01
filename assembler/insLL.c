@@ -1,6 +1,6 @@
 #include <stdlib.h>
+#include <string.h>
 #include "insLL.h"
-
 
 List *newList(){
 	List *list;
@@ -33,7 +33,7 @@ int deleteList(List *list){
 	return 0;
 }
 
-int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, uint16_t val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp){
+int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp){
 	Node *node;
 	Node *p;
 
@@ -54,7 +54,7 @@ int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, uin
 	}
 	node->data->ins_type = insType;
 	node->data->val_type = valType;
-	node->data->val = val & 0x7FFF;
+	strncpy(node->data->val, val, 64);
 	node->data->comp = comp;
 	node->data->reg = reg;
 	node->data->dest = dest;
