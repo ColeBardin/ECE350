@@ -7,6 +7,7 @@ D=M // D<-B
 D;JLE // Exit if B <= 0
 @18 // Load C
 D=M // D<-C
+// line comment
 @16 // Load A
 D=D+M // D = C+A
 @17 // Load B

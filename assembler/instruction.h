@@ -8,18 +8,10 @@
 #define DEST_SHIFT(x) (x<<3)
 #define JMP_SHIFT(x) (x)
 
-typedef struct List List;
-typedef struct Node Node;
-
-struct List {
-	Node *head;
-	Node *tail;
-};
-
-struct Node {
-	struct instruction *data;
-	Node *next;
-};
+typedef struct InsList InsList;
+typedef struct InsNode InsNode;
+typedef struct Instruction Instruction;
+typedef struct Computation Computation;
 
 enum INS_TYPE {
 	INS_A,
@@ -81,7 +73,17 @@ enum JMP_TYPE {
 	JMP_UNCON
 };
 
-struct instruction {
+struct InsList {
+	InsNode *head;
+	InsNode *tail;
+};
+
+struct InsNode {
+	struct Instruction *data;
+	InsNode *next;
+};
+
+struct Instruction {
 	enum INS_TYPE ins_type;
 	enum VAL_TYPE val_type;
 	char val[64];
@@ -91,16 +93,16 @@ struct instruction {
 	enum JMP_TYPE jmp;
 };
 
-struct computation {
+struct Computation {
 	char dest[128];
 	char comp[128];
 	char jump[128];
 };
 
-uint16_t build_ins(struct instruction *ins);
-void build_comp(struct computation *cmp, struct instruction *ins);
+uint16_t build_ins(Instruction *ins);
+void build_comp(Computation *cmp, Instruction *ins);
 
-List *newList();
-int deleteList(List *list);
-int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp);
+InsList *newList();
+int deleteList(InsList *list);
+int addInstruction(InsList *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp);
 

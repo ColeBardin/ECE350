@@ -4,14 +4,14 @@
 #include <string.h>
 #include "instruction.h"
 
-int parse(FILE *fp, List *dest);
-int tokenize(char *line, List *list);
-void determineCompute(char *line, List *list);
+int parse(FILE *fp, InsList *dest);
+int tokenize(char *line, InsList *list);
+void determineCompute(char *line, InsList *list);
 
 int main(int argc, char **argv){
 	FILE *fp;
-	List *list;
-	struct instruction *ins;
+	InsList *list;
+	Instruction *ins;
 	char *fnEXT;
 	int ic;
 	int offset;
@@ -39,7 +39,7 @@ int main(int argc, char **argv){
 		
 	ic = 0;
 	offset = 0;
-	for(Node *n = list->head; n != NULL; n=n->next, ic++){
+	for(InsNode *n = list->head; n != NULL; n=n->next, ic++){
 		ins = n->data;
 		if(ins->val_type == VAL_SYMBOL && ins->ins_type == VAL_SYMBOL){
 			printf("ins: %d: %s\n", ic, ins->val);
@@ -50,7 +50,7 @@ int main(int argc, char **argv){
 	exit(0);
 }
 
-int parse(FILE *fp, List *dest){
+int parse(FILE *fp, InsList *dest){
 	char line[512];
 	char c;
 	int i, lc, loc;
@@ -95,7 +95,7 @@ int parse(FILE *fp, List *dest){
 	return 0;
 }
 
-int tokenize(char *line, List *list){
+int tokenize(char *line, InsList *list){
 	int val;
 
 	switch(line[0]){
@@ -118,13 +118,13 @@ int tokenize(char *line, List *list){
 	return 0;
 }
 
-void determineCompute(char *line, List *list){
+void determineCompute(char *line, InsList *list){
 	char *pos;
 	uint8_t a;
 	enum JMP_TYPE jmp;
 	enum COMP_TYPE cmp;
-	struct computation comp;
-	struct instruction ins;
+	Computation comp;
+	Instruction ins;
 
 	// lines with ; char
 	pos = strchr(line, ';');

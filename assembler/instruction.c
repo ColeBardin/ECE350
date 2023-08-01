@@ -7,7 +7,7 @@ const int Nthresh = 17;
 const char *comp_strings[] = {"0", "1","-1","D","A","!D","!A","-D","-A","D+1","A+1","D-1","A-1","D+A","D-A","A-D","D&A","D|A","M","!M","-M","M+1","M-1","D+M","D-M","M-D","D&M","D|M"};
 const enum COMP_TYPE comp_bits[] = {COMP_0,COMP_1,COMP_NEG_1,COMP_D,COMP_AM,COMP_NOT_D,COMP_NOT_AM,COMP_NEG_D,COMP_NEG_AM,COMP_D_PLUS_1,COMP_AM_PLUS_1,COMP_D_MINUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM,COMP_AM,COMP_NOT_AM,COMP_NEG_AM,COMP_AM_PLUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM};
 
-uint16_t build_ins(struct instruction *ins){
+uint16_t build_ins(Instruction *ins){
 	uint16_t bits = 0;
 	int val;
 
@@ -27,7 +27,7 @@ uint16_t build_ins(struct instruction *ins){
 	return bits;
 }
 
-void build_comp(struct computation *cmp, struct instruction *ins){
+void build_comp(Computation *cmp, Instruction *ins){
 	char *pos;
 	
 	ins->ins_type = INS_C;
@@ -77,10 +77,10 @@ void build_comp(struct computation *cmp, struct instruction *ins){
 	}
 }
 
-List *newList(){
-	List *list;
+InsList *newList(){
+	InsList *list;
 
-	list = malloc(sizeof(List));
+	list = malloc(sizeof(InsList));
 	if(list == NULL){
 		return NULL;
 	}
@@ -89,8 +89,8 @@ List *newList(){
 	return list;	
 }
 
-int deleteList(List *list){
-	Node *c, *n;
+int deleteList(InsList *list){
+	InsNode *c, *n;
 	if(list == NULL){
 		return -1;
 	}
@@ -108,21 +108,21 @@ int deleteList(List *list){
 	return 0;
 }
 
-int addInstruction(List *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp){
-	Node *node;
-	Node *p;
+int addInstruction(InsList *list, enum INS_TYPE insType, enum VAL_TYPE valType, char *val, enum COMP_TYPE comp, enum A_REG_SEL reg, enum DEST_TYPE dest, enum JMP_TYPE jmp){
+	InsNode *node;
+	InsNode *p;
 
 	if(list == NULL){
 		return -1;
 	}
 
 	// Build node
-	node = malloc(sizeof(Node));
+	node = malloc(sizeof(InsNode));
 	if(node == NULL){
 		return -1;
 	}	
 	node->next = NULL;
-	node->data = malloc(sizeof(struct instruction));
+	node->data = malloc(sizeof(struct Instruction));
 	if(node->data == NULL){
 		free(node);
 		return -1;
