@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #define INS_SHIFT(x) (x<<15)
+#define XX_SHIFT(x) (x<<13)
 #define A_REG_SEL_SHIFT(x) (x<<12)
 #define CMP_SHIFT(x) (x<<6)
 #define DEST_SHIFT(x) (x<<3)

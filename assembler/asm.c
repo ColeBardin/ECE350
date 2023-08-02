@@ -136,6 +136,8 @@ int tokenize(char *line, InsList *list){
 	int val;
 
 	switch(line[0]){
+		case '\0':
+			break;
 		case '(':
 			line[strlen(line) - 1] = '\0';
 			addInstruction(list, INS_P, VAL_SYMBOL, &line[1], 0, 0, 0, 0);

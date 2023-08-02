@@ -13,16 +13,18 @@ void decToBin16(uint16_t val, char *buf){
 		buf[15-i] = '0' + ((val & (1 << i)) > 0);
 	}
 }
+
 uint16_t buildIns(Instruction *ins){
 	uint16_t bits = 0;
 	int val;
 
 	if(ins->ins_type == INS_A){
-		bits = INS_SHIFT(ins->ins_type);
+		bits |= INS_SHIFT(ins->ins_type);
 		bits |= (atoi(ins->val) & 0x7FFF);
 		return bits;
 	}else if(ins->ins_type == INS_C){
-		bits = INS_SHIFT(ins->ins_type);
+		bits |= INS_SHIFT(ins->ins_type);
+		bits |= XX_SHIFT(3);
 		bits |= A_REG_SEL_SHIFT(ins->reg);
 		bits |= CMP_SHIFT(ins->comp);
 		bits |= DEST_SHIFT(ins->dest);
