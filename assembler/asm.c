@@ -10,9 +10,13 @@ void determineCompute(char *line, InsList *list);
 
 int main(int argc, char **argv){
 	FILE *fp;
-	InsList *list;
+	InsList *insList;
 	Instruction *ins;
+	LabelList *labelList;
 	char *fnEXT;
+	char fnOut[32];
+	char labelNum[64];
+	char bits[18];
 	int ic;
 	int offset;
 	
@@ -30,23 +34,56 @@ int main(int argc, char **argv){
 		exit(-1);
 	}	
 
-	list = newInsList();
-	if(list == NULL){
+	insList = newInsList();
+	if(insList == NULL){
 		exit(-1);
 	}	
 	
-	parse(fp, list);
+	labelList = newLabelList();
+	if(labelList == NULL){
+		exit(-1);
+	}
+	
+	parse(fp, insList);
+	fclose(fp);
 		
 	ic = 0;
 	offset = 0;
-	for(InsNode *n = list->head; n != NULL; n=n->next, ic++){
-		ins = n->data;
-		if(ins->val_type == VAL_SYMBOL && ins->ins_type == VAL_SYMBOL){
-			printf("ins: %d: %s\n", ic, ins->val);
+	// Find labels and assign ROM addresses
+	for(InsNode *n = insList->head; n != NULL; n=n->next, ic++){
+		if(n->data->val_type == VAL_SYMBOL && n->data->ins_type == VAL_SYMBOL){
+			addLabel(labelList, n->data->val, ic - offset++);
 		}
 	} 
+	// Replace all uses of labels with their numbers
+	for(InsNode *n = insList->head; n != NULL; n=n->next){
+		if(n->data->ins_type == INS_A && n->data->val_type == VAL_SYMBOL){
+			sprintf(labelNum, "%d", getLabelVal(labelList, n->data->val));
+			//printf("%s: %s\n", labelNum, n->data->val);
+			strcpy(n->data->val, labelNum);
+			n->data->val_type = VAL_NUMERIC;
+		}
+	}
 
-	deleteInsList(list);
+	strcpy(fnOut, argv[1]);
+	fnOut[strlen(fnOut) - 3] = '\0';
+	strcat(fnOut, "hack");
+
+	bits[16] = '\n';
+	bits[17] = '\0';
+	fp = fopen(fnOut, "w");
+	if(fp != NULL){
+		for(InsNode *n = insList->head; n != NULL; n=n->next){
+			if(n->data->ins_type != INS_P){
+				decToBin16(buildIns(n->data), bits);
+				//printf("%d, %s", buildIns(n->data), bits);
+				fwrite(bits, strlen(bits), 1, fp);
+			}
+		}
+	}
+	fclose(fp);
+	deleteInsList(insList);
+	deleteLabelList(labelList);
 	exit(0);
 }
 
