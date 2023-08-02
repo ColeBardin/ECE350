@@ -7,6 +7,12 @@ const int compThresh = 17;
 const char *compStrings[] = {"0", "1","-1","D","A","!D","!A","-D","-A","D+1","A+1","D-1","A-1","D+A","D-A","A-D","D&A","D|A","M","!M","-M","M+1","M-1","D+M","D-M","M-D","D&M","D|M"};
 const enum COMP_T compBits[] = {COMP_0,COMP_1,COMP_NEG_1,COMP_D,COMP_AM,COMP_NOT_D,COMP_NOT_AM,COMP_NEG_D,COMP_NEG_AM,COMP_D_PLUS_1,COMP_AM_PLUS_1,COMP_D_MINUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM,COMP_AM,COMP_NOT_AM,COMP_NEG_AM,COMP_AM_PLUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM};
 
+void decToBin16(uint16_t val, char *buf){
+	int i;
+	for(i = 0; i < 16; i++){
+		buf[15-i] = '0' + ((val & (1 << i)) > 0);
+	}
+}
 uint16_t buildIns(Instruction *ins){
 	uint16_t bits = 0;
 	int val;
@@ -85,7 +91,6 @@ InsList *newInsList(){
 		return NULL;
 	}
 	list->head = NULL;
-	list->tail = NULL;
 	return list;	
 }
 
@@ -142,7 +147,74 @@ int addInstruction(InsList *list, enum INS_T insType, enum VAL_T valType, char *
 		for(p = list->head; p->next != NULL; p = p->next);
 		p->next = node;
 	}
-	list->tail = node;
 	return 1;
+}
+
+LabelList *newLabelList(){
+	LabelList *list;
+	list = malloc(sizeof(LabelList));
+	if(list == NULL){
+		return NULL;
+	}
+	list->head = NULL;
+	return list;
+}
+
+int deleteLabelList(LabelList *list){
+	LabelNode *c, *n;
+	if(list == NULL){
+		return -1;
+	}
+
+	if(list->head == NULL){
+		free(list);
+		return 0;
+	}
+	
+	for(c = list->head; c != NULL; c = n){
+		n = c->next;
+		free(c);
+	}
+	free(list);
+	return 0;
+}
+
+int addLabel(LabelList *list, char *name, int val){
+	LabelNode *node;
+	LabelNode *p;
+
+	if(list == NULL){
+		return -1;
+	}
+
+	// Build node
+	node = malloc(sizeof(LabelNode));
+	if(node == NULL){
+		return -1;
+	}	
+
+	strcpy(node->name, name);
+	node->val = val;
+	node->next = NULL;
+	
+	// add to list
+	if(list->head == NULL){
+		list->head = node;
+	}else{
+		for(p = list->head; p->next != NULL; p = p->next);
+		p->next = node;
+	}
+	return 1;
+}
+
+int getLabelVal(LabelList *list, char *target){
+	LabelNode *n;
+
+	for(n = list->head; n != NULL; n = n->next){
+		if(!strcmp(target, n->name)){
+			return n->val;
+		}
+	}
+	return -1;
 }
 
