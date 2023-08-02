@@ -22,8 +22,8 @@
  * Date created: October 7, 2020
  * Date modified: July 21, 2023
  *
- * Student names(s): 
- * Date modified:  
+ * Student names(s): Cole Bardin
+ * Date modified: 8/1/2023
  */
 
 CHIP Memory {
@@ -31,5 +31,11 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
+    DMux(in=load, sel=address[14], a=loadR16K, b=loadScreen);
+    RAM16K(in=in, load=loadR16K, address=address[0..13], out=outR16K);
+    Screen(in=in, load=loadScreen, address=address[0..12], out=screenOut);
+    Keyboard(out=keyboardOut);
+    Mux16(a=screenOut, b=keyboardOut, sel=address[13], out=UIout);
+    Mux16(a=outR16K, b=UIout, sel=address[14], out=out);
     // TODO: Implement the memory chip
 }
