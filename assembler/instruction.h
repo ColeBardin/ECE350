@@ -10,6 +10,8 @@
 
 typedef struct InsList InsList;
 typedef struct InsNode InsNode;
+typedef struct LabelList LabelList;
+typedef struct LabelNode LabelNode;
 typedef struct Instruction Instruction;
 typedef struct Computation Computation;
 
@@ -75,12 +77,21 @@ enum JMP_T {
 
 struct InsList {
 	InsNode *head;
-	InsNode *tail;
 };
 
 struct InsNode {
-	struct Instruction *data;
+	Instruction *data;
 	InsNode *next;
+};
+
+struct LabelList {
+	LabelNode *head;
+};
+
+struct LabelNode {
+	char name[64];
+	int val;
+	LabelNode *next;
 };
 
 struct Instruction {
@@ -99,9 +110,16 @@ struct Computation {
 	char jump[128];
 };
 
+void decToBin16(uint16_t val, char *buf);
 uint16_t buildIns(Instruction *ins);
 void buildComp(Computation *cmp, Instruction *ins);
 
 InsList *newInsList();
 int deleteInsList(InsList *list);
 int addInstruction(InsList *list, enum INS_T insType, enum VAL_T valType, char *val, enum COMP_T comp, enum REG_SEL reg, enum DEST_T dest, enum JMP_T jmp);
+
+LabelList *newLabelList();
+int deleteLabelList(LabelList *list);
+int addLabel(LabelList *list, char *name, int val);
+int getLabelVal(LabelList *list, char *target);
+
