@@ -12,8 +12,8 @@
  * Date created: October 7, 2020
  * Date modified: APril 21, 2023
  * 
- * Student name(s): 
- * Date modified: 
+ * Student name(s): Cole Bardin
+ * Date modified: 8/2/2023
  * 
  * Note: This project is part of www.nand2tetris.or and the book "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
  */
@@ -22,5 +22,8 @@ CHIP Computer {
     IN reset;
 
     PARTS:
+    ROM32K(address=pc, out=instruction);
+    CPU(inM=inM, instruction=instruction, reset=reset, outM=outM, writeM=writeM, addressM=AofM, pc=pc);
+    Memory(in=outM, load=writeM, address=AofM, out=inM);
     // TODO: implement the top-level computer chip 
 }
