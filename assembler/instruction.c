@@ -4,10 +4,72 @@
 
 const int numComps = 30;
 const int compThresh = 19;
-const char *compStrings[] = {"0", "1","-1","D","A","!D","!A","-D","-A","D+1","A+1","D-1","A-1","D+A","A+D","D-A","A-D","D&A","D|A","M","!M","-M","M+1","M-1","D+M","M+D","D-M","M-D","D&M","D|M"};
-const enum COMP_T compBits[] = {COMP_0,COMP_1,COMP_NEG_1,COMP_D,COMP_AM,COMP_NOT_D,COMP_NOT_AM,COMP_NEG_D,COMP_NEG_AM,COMP_D_PLUS_1,COMP_AM_PLUS_1,COMP_D_MINUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM,COMP_AM,COMP_NOT_AM,COMP_NEG_AM,COMP_AM_PLUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM};
-char *defaultVarNames[] = {"SP", "LCL", "ARG", "THIS", "THAT", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "SCREEN", "KEYBOARD"};
-int defaultVarVals[] = {0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16384, 24576};
+KeyVal comps[] = {
+{"0",COMP_0},
+{"1",COMP_1},
+{"-1",COMP_NEG_1},
+{"D",COMP_D},
+{"A",COMP_AM},
+{"!D",COMP_NOT_D},
+{"!A",COMP_NOT_AM},
+{"-D",COMP_NEG_D},
+{"-A",COMP_NEG_AM},
+{"D+1",COMP_D_PLUS_1},
+{"A+1",COMP_AM_PLUS_1},
+{"D-1",COMP_D_MINUS_1},
+{"A-1",COMP_AM_MINUS_1},
+{"D+A",COMP_D_PLUS_AM},
+{"A+D",COMP_D_PLUS_AM},
+{"D-A",COMP_D_MINUS_AM},
+{"A-D",COMP_AM_MINUS_D},
+{"D&A",COMP_D_AND_AM},
+{"D|A",COMP_D_OR_AM},
+{"M",COMP_AM},
+{"!M",COMP_NOT_AM},
+{"-M",COMP_NEG_AM},
+{"M+1",COMP_AM_PLUS_1},
+{"M-1",COMP_AM_MINUS_1},
+{"D+M",COMP_D_PLUS_AM},
+{"M+D",COMP_D_PLUS_AM},
+{"D-M",COMP_D_MINUS_AM},
+{"M-D",COMP_AM_MINUS_D},
+{"D&M",COMP_D_AND_AM},
+{"D|M",COMP_D_OR_AM}};
+
+KeyVal jumps[] = {
+{"", JMP_NULL},
+{"JGT", JMP_GT},
+{"JEQ", JMP_EQ},
+{"JGE", JMP_GE},
+{"JLT", JMP_LT},
+{"JNE", JMP_NE},
+{"JLE", JMP_LE},
+{"JMP", JMP_UNCON}};
+
+KeyVal defaultVars[] = {
+{"SP",0}, 
+{"LCL",1}, 
+{"ARG",2}, 
+{"THIS",3}, 
+{"THAT",4}, 
+{"R0",0}, 
+{"R1",1}, 
+{"R2",2}, 
+{"R3",3}, 
+{"R4",4}, 
+{"R5",5}, 
+{"R6",6}, 
+{"R7",7}, 
+{"R8",8}, 
+{"R9",9}, 
+{"R10",10}, 
+{"R11",11}, 
+{"R12",12}, 
+{"R13",13}, 
+{"R14",14}, 
+{"R15",15}, 
+{"SCREEN", 16384}, 
+{"KEYBOARD", 24576}};
 
 void decToBin16(uint16_t val, char *buf){
 	int i;
@@ -39,6 +101,7 @@ uint16_t buildIns(Instruction *ins){
 
 void buildComp(Computation *cmp, Instruction *ins){
 	char *pos;
+	int n, i;
 	
 	ins->ins_type = INS_C;
 	ins->val_type = VAL_NULL;
@@ -59,32 +122,21 @@ void buildComp(Computation *cmp, Instruction *ins){
 	
 	// Find matching byte code for computation
 	pos = cmp->comp;
-	for(int i = 0; i < numComps; i++){
-		if(!strcmp(pos, compStrings[i])){
-			ins->comp = compBits[i];
+	for(i = 0; i < numComps; i++){
+		if(!strcmp(pos, comps[i].key)){
+			ins->comp = comps[i].val;
 			ins->reg = (i >= compThresh) ? REG_M : REG_A;
 		}
 	}
 
 	// Decode jump instruction
 	pos = cmp->jump;
-	if(pos[0] == '\0'){
-		ins->jmp = JMP_NULL;
-	}else if(!strncmp(pos, "JGT", 3)){
-		ins->jmp = JMP_GT;
-	}else if(!strncmp(pos, "JEQ", 3)){
-		ins->jmp = JMP_EQ;
-	}else if(!strncmp(pos, "JGE", 3)){
-		ins->jmp = JMP_GE;
-	}else if(!strncmp(pos, "JLT", 3)){
-		ins->jmp = JMP_LT;
-	}else if(!strncmp(pos, "JNE", 3)){
-		ins->jmp = JMP_NE;
-	}else if(!strncmp(pos, "JLE", 3)){
-		ins->jmp = JMP_LE;
-	}else if(!strncmp(pos, "JMP", 3)){
-		ins->jmp = JMP_UNCON;
-	}
+	n = sizeof(jumps) / sizeof(KeyVal);
+	for(i = 0; i < n; i++){
+		if(!strcmp(pos, jumps[i].key)){
+			ins->jmp = jumps[i].val;
+		}
+	}	
 }
 
 InsList *newInsList(){
@@ -224,9 +276,9 @@ int getLabelVal(LabelList *list, char *target){
 
 int loadDefaultVariables(LabelList *list){
 	int n, i;
-	n = sizeof(defaultVarNames) / sizeof(char *);
+	n = sizeof(defaultVars) / sizeof(KeyVal);
 	for(i = 0; i < n; i++){
-		addLabel(list, defaultVarNames[i], defaultVarVals[i]);
+		addLabel(list, defaultVars[i].key, defaultVars[i].val);
 	}
 	return 0;	
 }

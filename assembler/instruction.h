@@ -15,6 +15,7 @@ typedef struct LabelList LabelList;
 typedef struct LabelNode LabelNode;
 typedef struct Instruction Instruction;
 typedef struct Computation Computation;
+typedef struct KeyVal KeyVal;
 
 enum INS_T {
 	INS_A,
@@ -109,6 +110,11 @@ struct Computation {
 	char dest[128];
 	char comp[128];
 	char jump[128];
+};
+
+struct KeyVal {
+	char *key;
+	int val;
 };
 
 void decToBin16(uint16_t val, char *buf);
