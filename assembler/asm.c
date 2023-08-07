@@ -78,7 +78,7 @@ int main(int argc, char **argv){
 		if(n->data->val_type == VAL_SYMBOL && n->data->ins_type == INS_A){
 			// Symbol is not a label
 			if(getLabelVal(labelList, n->data->val) == -1){
-				// Not default variable
+				// If variable doesn't aleady exist
 				if(getLabelVal(varList, n->data->val) == -1){
 					addLabel(varList, n->data->val, memAddr++);	
 				}
@@ -94,7 +94,6 @@ int main(int argc, char **argv){
 			}
 			//printf("replaced %s with %d\n", n->data->val, ic);
 			snprintf(n->data->val, 64, "%d", ic);
-			//strcpy(n->data->val, labelNum);
 			n->data->val_type = VAL_NUMERIC;
 		}
 	}
