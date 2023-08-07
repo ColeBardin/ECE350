@@ -111,7 +111,6 @@ struct Computation {
 	char jump[128];
 };
 
-
 void decToBin16(uint16_t val, char *buf);
 uint16_t buildIns(Instruction *ins);
 void buildComp(Computation *cmp, Instruction *ins);
