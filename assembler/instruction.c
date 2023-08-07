@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-const int numComps = 28;
-const int compThresh = 17;
-const char *compStrings[] = {"0", "1","-1","D","A","!D","!A","-D","-A","D+1","A+1","D-1","A-1","D+A","D-A","A-D","D&A","D|A","M","!M","-M","M+1","M-1","D+M","D-M","M-D","D&M","D|M"};
-const enum COMP_T compBits[] = {COMP_0,COMP_1,COMP_NEG_1,COMP_D,COMP_AM,COMP_NOT_D,COMP_NOT_AM,COMP_NEG_D,COMP_NEG_AM,COMP_D_PLUS_1,COMP_AM_PLUS_1,COMP_D_MINUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM,COMP_AM,COMP_NOT_AM,COMP_NEG_AM,COMP_AM_PLUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM};
+const int numComps = 30;
+const int compThresh = 19;
+const char *compStrings[] = {"0", "1","-1","D","A","!D","!A","-D","-A","D+1","A+1","D-1","A-1","D+A","A+D","D-A","A-D","D&A","D|A","M","!M","-M","M+1","M-1","D+M","M+D","D-M","M-D","D&M","D|M"};
+const enum COMP_T compBits[] = {COMP_0,COMP_1,COMP_NEG_1,COMP_D,COMP_AM,COMP_NOT_D,COMP_NOT_AM,COMP_NEG_D,COMP_NEG_AM,COMP_D_PLUS_1,COMP_AM_PLUS_1,COMP_D_MINUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM,COMP_AM,COMP_NOT_AM,COMP_NEG_AM,COMP_AM_PLUS_1,COMP_AM_MINUS_1,COMP_D_PLUS_AM,COMP_D_PLUS_AM,COMP_D_MINUS_AM,COMP_AM_MINUS_D,COMP_D_AND_AM,COMP_D_OR_AM};
+char *defaultVarNames[] = {"SP", "LCL", "ARG", "THIS", "THAT", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15", "SCREEN", "KEYBOARD"};
+int defaultVarVals[] = {0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16384, 24576};
 
 void decToBin16(uint16_t val, char *buf){
 	int i;
@@ -60,7 +62,7 @@ void buildComp(Computation *cmp, Instruction *ins){
 	for(int i = 0; i < numComps; i++){
 		if(!strcmp(pos, compStrings[i])){
 			ins->comp = compBits[i];
-			ins->reg = (i > compThresh) ? REG_M : REG_A;
+			ins->reg = (i >= compThresh) ? REG_M : REG_A;
 		}
 	}
 
@@ -218,5 +220,14 @@ int getLabelVal(LabelList *list, char *target){
 		}
 	}
 	return -1;
+}
+
+int loadDefaultVariables(LabelList *list){
+	int n, i;
+	n = sizeof(defaultVarNames) / sizeof(char *);
+	for(i = 0; i < n; i++){
+		addLabel(list, defaultVarNames[i], defaultVarVals[i]);
+	}
+	return 0;	
 }
 

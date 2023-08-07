@@ -111,6 +111,7 @@ struct Computation {
 	char jump[128];
 };
 
+
 void decToBin16(uint16_t val, char *buf);
 uint16_t buildIns(Instruction *ins);
 void buildComp(Computation *cmp, Instruction *ins);
@@ -123,4 +124,5 @@ LabelList *newLabelList();
 int deleteLabelList(LabelList *list);
 int addLabel(LabelList *list, char *name, int val);
 int getLabelVal(LabelList *list, char *target);
+int loadDefaultVariables(LabelList *list);
 

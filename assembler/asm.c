@@ -10,15 +10,17 @@ void determineCompute(char *line, InsList *list);
 
 int main(int argc, char **argv){
 	FILE *fp;
-	InsList *insList;
-	Instruction *ins;
-	LabelList *labelList;
 	char *fnEXT;
-	char fnOut[32];
+	char fnOut[64];
 	char labelNum[64];
 	char bits[18];
 	int ic;
 	int offset;
+	int memAddr;
+	InsList *insList;
+	Instruction *ins;
+	LabelList *labelList;
+	LabelList *varList;
 	
 	if(argc != 2){
 		exit(-1);
@@ -31,16 +33,30 @@ int main(int argc, char **argv){
 
 	fp = fopen(argv[1], "r");
 	if(fp == NULL){
+		fprintf(stderr, "Error: Failed to open file %s\n", argv[1]);
 		exit(-1);
 	}	
 
 	insList = newInsList();
 	if(insList == NULL){
+		fprintf(stderr, "Error: Failed to allocate memory for instruction list\n");
+		fclose(fp);
 		exit(-1);
 	}	
 	
 	labelList = newLabelList();
 	if(labelList == NULL){
+		fprintf(stderr, "Error: Failed to allocate memory for lable list\n");
+		fclose(fp);
+		deleteInsList(insList);
+		exit(-1);
+	}
+	varList = newLabelList();
+	if(varList == NULL){
+		fprintf(stderr, "Error: Failed to allocate memory for lable list\n");
+		fclose(fp);
+		deleteInsList(insList);
+		deleteLabelList(labelList);
 		exit(-1);
 	}
 	
@@ -51,16 +67,34 @@ int main(int argc, char **argv){
 	offset = 0;
 	// Find labels and assign ROM addresses
 	for(InsNode *n = insList->head; n != NULL; n=n->next, ic++){
-		if(n->data->val_type == VAL_SYMBOL && n->data->ins_type == VAL_SYMBOL){
+		if(n->data->val_type == VAL_SYMBOL && n->data->ins_type == INS_P){
 			addLabel(labelList, n->data->val, ic - offset++);
 		}
 	} 
-	// Replace all uses of labels with their numbers
+	memAddr = 16;
+	loadDefaultVariables(varList);
+	// Assign all variables
+	for(InsNode *n = insList->head; n != NULL; n=n->next){
+		if(n->data->val_type == VAL_SYMBOL && n->data->ins_type == INS_A){
+			// Symbol is not a label
+			if(getLabelVal(labelList, n->data->val) == -1){
+				// Not default variable
+				if(getLabelVal(varList, n->data->val) == -1){
+					addLabel(varList, n->data->val, memAddr++);	
+				}
+			}	
+		}
+	}
+	// Replace all uses of labels with their values
 	for(InsNode *n = insList->head; n != NULL; n=n->next){
 		if(n->data->ins_type == INS_A && n->data->val_type == VAL_SYMBOL){
-			sprintf(labelNum, "%d", getLabelVal(labelList, n->data->val));
-			//printf("%s: %s\n", labelNum, n->data->val);
-			strcpy(n->data->val, labelNum);
+			ic = getLabelVal(labelList, n->data->val);
+			if(ic == -1){
+				ic = getLabelVal(varList, n->data->val);
+			}
+			//printf("replaced %s with %d\n", n->data->val, ic);
+			snprintf(n->data->val, 64, "%d", ic);
+			//strcpy(n->data->val, labelNum);
 			n->data->val_type = VAL_NUMERIC;
 		}
 	}
@@ -72,18 +106,24 @@ int main(int argc, char **argv){
 	bits[16] = '\n';
 	bits[17] = '\0';
 	fp = fopen(fnOut, "w");
-	if(fp != NULL){
-		for(InsNode *n = insList->head; n != NULL; n=n->next){
-			if(n->data->ins_type != INS_P){
-				decToBin16(buildIns(n->data), bits);
-				//printf("%d, %s", buildIns(n->data), bits);
-				fwrite(bits, strlen(bits), 1, fp);
-			}
+	if(fp == NULL){
+		fprintf(stderr, "Error: failed to create or open output file %s\n", fnOut);
+		deleteInsList(insList);
+		deleteLabelList(labelList);
+		deleteLabelList(varList);
+		exit(1);
+	}
+	// Write all convert instructions to numbers and write binary to file	
+	for(InsNode *n = insList->head; n != NULL; n=n->next){
+		if(n->data->ins_type != INS_P){
+			decToBin16(buildIns(n->data), bits);
+			fwrite(bits, strlen(bits), 1, fp);
 		}
 	}
 	fclose(fp);
 	deleteInsList(insList);
 	deleteLabelList(labelList);
+	deleteLabelList(varList);
 	exit(0);
 }
 
@@ -102,7 +142,7 @@ int parse(FILE *fp, InsList *dest){
 				continue;
 			}else if(c == '\n' || c == EOF){
 				break;
-			}else{
+			}else if(c > ' ' && c < 127){
 				line[i] = c;	
 				i++;	
 			}
@@ -136,21 +176,27 @@ int tokenize(char *line, InsList *list){
 	int val;
 
 	switch(line[0]){
+		case ' ':
+		case '\t':
+		case '\n':
 		case '\0':
 			break;
 		case '(':
+			// Label definition to be resolved later
 			line[strlen(line) - 1] = '\0';
 			addInstruction(list, INS_P, VAL_SYMBOL, &line[1], 0, 0, 0, 0);
 			break;
 		case '@':
+			// Load instruction, mark labels as symbolic
 			val = atoi(&line[1]);
-			if(val == 0){
+			if(val == 0 && line[1] != '0'){
 				addInstruction(list, INS_A, VAL_SYMBOL, &line[1], 0, 0, 0, 0);
 			}else{
 				addInstruction(list, INS_A, VAL_NUMERIC, &line[1], 0, 0, 0, 0);
 			}
 			break;
 		default:
+			// Otherwise, determine C type instruction attributes
 			determineCompute(line, list);
 			break;		
 	}	
@@ -195,7 +241,9 @@ void determineCompute(char *line, InsList *list){
 			break;
 		}
 	}
+	// Build instruction based on tokenized values
 	buildComp(&comp, &ins);
+	// Add instruction to list
 	addInstruction(list, ins.ins_type, ins.val_type, ins.val, ins.comp, ins.reg, ins.dest, ins.jmp);
 }
 
