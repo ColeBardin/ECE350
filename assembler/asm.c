@@ -111,7 +111,7 @@ int main(int argc, char **argv){
 		deleteLabelList(varList);
 		exit(1);
 	}
-	// Write all convert instructions to numbers and write binary to file	
+	// Convert instructions to binary and write to file
 	for(InsNode *n = insList->head; n != NULL; n=n->next){
 		if(n->data->ins_type != INS_P){
 			decToBin16(buildIns(n->data), bits);
