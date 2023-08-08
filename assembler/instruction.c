@@ -99,6 +99,50 @@ uint16_t buildIns(Instruction *ins){
 	return bits;
 }
 
+void determineCompute(char *line, InsList *list){
+	char *pos;
+	uint8_t a;
+	enum JMP_T jmp;
+	enum COMP_T cmp;
+	Computation comp;
+	Instruction ins;
+
+	// lines with ; char
+	pos = strchr(line, ';');
+	if(pos != NULL){
+		strcpy(comp.jump, ++pos);
+	}else{
+		comp.jump[0] = '\0';
+	}
+	// lines with = char
+	pos = strchr(line, '=');
+	if(pos != NULL){
+		strcpy(comp.comp, ++pos);
+		strcpy(comp.dest, line);
+		// Set = to be end of dest string
+		for(int i = 0; i < strlen(comp.dest); i++){
+			if(comp.dest[i] == '='){
+				comp.dest[i] = '\0';
+				break;
+			}
+		}	
+	}else{
+		strcpy(comp.comp, line);
+		comp.dest[0] = '\0';
+	}
+	// Set ; to be end of comp string
+	for(int i = 0; i < strlen(comp.comp); i++){
+		if(comp.comp[i] == ';'){
+			comp.comp[i] = '\0';
+			break;
+		}
+	}
+	// Build instruction based on tokenized values
+	buildComp(&comp, &ins);
+	// Add instruction to list
+	addInstruction(list, ins.ins_type, ins.val_type, ins.val, ins.comp, ins.reg, ins.dest, ins.jmp);
+}
+
 void buildComp(Computation *cmp, Instruction *ins){
 	char *pos;
 	int n, i;

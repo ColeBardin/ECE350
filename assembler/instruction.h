@@ -119,6 +119,7 @@ struct KeyVal {
 
 void decToBin16(uint16_t val, char *buf);
 uint16_t buildIns(Instruction *ins);
+void determineCompute(char *line, InsList *list);
 void buildComp(Computation *cmp, Instruction *ins);
 
 InsList *newInsList();
