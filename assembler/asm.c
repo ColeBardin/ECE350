@@ -104,21 +104,18 @@ int main(int argc, char **argv){
 	bits[16] = '\n';
 	bits[17] = '\0';
 	fp = fopen(fnOut, "w");
-	if(fp == NULL){
-		fprintf(stderr, "Error: failed to open output file %s\n", fnOut);
-		deleteInsList(insList);
-		deleteLabelList(labelList);
-		deleteLabelList(varList);
-		exit(1);
-	}
-	// Convert instructions to binary and write to file
-	for(InsNode *n = insList->head; n != NULL; n=n->next){
-		if(n->data->ins_type != INS_P){
-			decToBin16(buildIns(n->data), bits);
-			fwrite(bits, strlen(bits), 1, fp);
+	if(fp != NULL){
+		// Convert instructions to binary and write to file
+		for(InsNode *n = insList->head; n != NULL; n=n->next){
+			if(n->data->ins_type != INS_P){
+				decToBin16(buildIns(n->data), bits);
+				fwrite(bits, strlen(bits), 1, fp);
+			}
 		}
+		fclose(fp);
+	}else{
+		fprintf(stderr, "Error: failed to open output file %s\n", fnOut);
 	}
-	fclose(fp);
 	deleteInsList(insList);
 	deleteLabelList(labelList);
 	deleteLabelList(varList);

@@ -69,7 +69,7 @@ KeyVal defaultVars[] = {
 {"R14",14}, 
 {"R15",15}, 
 {"SCREEN", 16384}, 
-{"KEYBOARD", 24576}};
+{"KBD", 24576}};
 
 void decToBin16(uint16_t val, char *buf){
 	int i;

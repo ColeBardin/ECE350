@@ -5,12 +5,12 @@ s=0
 t=0
 
 if [ -f "Makefile" ] ; then
-	make -s
+	make
 fi
 
 if [ -d "test" ] ; then
 	for f in test/*.asm ; do
-		echo "--Testing $f" ;
+		echo "--Assembling $f" ;
 
 		((c=c+1))
 
