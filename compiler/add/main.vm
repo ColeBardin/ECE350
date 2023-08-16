@@ -1,0 +1,12 @@
+// Main function calls the addition function to add 4 + 8
+// Author: Naga Kandasamy
+
+function main 2
+push constant 5
+pop local 0             // a = 5
+push constant 10
+pop local 1             // b = 10
+push local 0
+push local 1
+call add 2              // a + b
+return

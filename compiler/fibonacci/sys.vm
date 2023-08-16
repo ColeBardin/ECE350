@@ -1,0 +1,13 @@
+// Pushes a constant n onto the stack, and calls the fibionacci
+// function, which computes the n'th element of the Fibonacci series.
+// Expected output: value of 8, which is the 6th element in the fibonacci series, stored in RAM[256], which is the top of the stack
+// 
+// This file is part of www.nand2tetris.org and the book "The Elements of Computing Systems by Nisan and Schocken, MIT Press.
+// 
+// Author: Naga Kandasamy
+
+function init 0
+set sp 256
+call main 0       // computes the n'th fibonacci element
+label WHILE
+goto WHILE              // loops infinitely

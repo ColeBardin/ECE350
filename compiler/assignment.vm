@@ -1,0 +1,15 @@
+// This is a test program to verify assignment operations
+// Author: Naga Kandasamy
+// Correct result:
+// RAM[300] RAM[301] RAM[302] 
+//     5       0        10
+
+set sp 256      // Set base address of stack segement
+set local 300   // Set base address of local segment
+push constant 5
+pop local 0
+push constant 0 
+pop local 1
+push constant 10
+pop local 2
+end

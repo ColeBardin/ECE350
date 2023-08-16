@@ -1,0 +1,26 @@
+// Main function calls a sequence of arithmetic operations
+// Author: Naga Kandasamy
+
+function main 4
+push constant 5
+pop local 0             // a = 5
+push constant 10
+pop local 1             // b = 10
+push local 0
+push local 1
+call add 2              // a + b 
+pop local 0             // a = a + b
+push constant 100
+pop local 2             // c = 100
+push constant 80
+pop local 3             // d = 80
+push local 2
+push local 3
+call add 2
+pop local 2             // c = c + d
+push local 0            
+push local 2
+call sub 2              // a - c
+pop local 0             // a = a - c
+push local 0            // push a as the return value 
+return

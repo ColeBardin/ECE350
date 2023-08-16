@@ -1,0 +1,8 @@
+// Code to intialize the system prior to executing Code
+// Author: Naga Kandasamy
+// Expected output: value of 15 stored in RAM[256] 
+
+function init 0
+set sp 256
+call main 0 
+end

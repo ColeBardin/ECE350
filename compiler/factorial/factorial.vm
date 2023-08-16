@@ -1,0 +1,25 @@
+// Function calculates the factorial as n! = 1 * 2 * ... * (n - 1) * n
+// Author: Naga Kandasamy
+
+function factorial 2
+push constant 1
+pop local 0                     // result = 1
+push constant 1
+pop local 1                     // j = 1
+label FACTORIAL_LOOP
+push local 1
+push constant 1 
+add 
+pop local 1                     // j = j + 1
+push local 1
+push argument 0
+gt
+if-goto FACTORIAL_LOOP_END      // if j > n, goto FACTORIAL_LOOP_END
+push local 0 
+push local 1
+call mult 2
+pop local 0                     // result = result * j
+goto FACTORIAL_LOOP
+label FACTORIAL_LOOP_END
+push local 0
+return

@@ -1,0 +1,7 @@
+// Main function calls the factorial function to calculate 4! 
+// Author: Naga Kandasamy
+
+function main 0
+push constant 4
+call factorial 1
+return

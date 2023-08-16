@@ -1,0 +1,18 @@
+// This is a test program to verify stack operations on the static segment
+// Author: Naga Kandasamy
+// Orignal source: "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
+// Correct result: RAM[256] = 1110 
+
+set sp 256
+push constant 111
+push constant 333
+push constant 888
+pop static 8
+pop static 3
+pop static 1
+push static 3
+push static 1
+sub
+push static 8
+add
+end

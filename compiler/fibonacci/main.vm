@@ -1,0 +1,6 @@
+// main.vm 
+
+function main 0
+push constant 6
+call fibonacci 1
+return

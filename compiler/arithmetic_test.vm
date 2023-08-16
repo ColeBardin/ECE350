@@ -1,0 +1,19 @@
+// This is a test program to verify various arithmetic operations on the stack
+// Author: Naga Kandasamy
+// Correct result: RAM[303] = 50
+
+set sp 256
+set local 300
+push constant 50
+pop local 0
+push constant 150
+pop local 1
+push local 0
+push local 1
+add
+pop local 2
+push local 2
+push local 1
+sub
+pop local 3
+end

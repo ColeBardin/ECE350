@@ -1,0 +1,38 @@
+// This is a test program to verify various memory access operations on the stack
+// Author: Naga Kandasamy
+// Orignal source: "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
+// Correct result:
+// RAM[256] RAM[300] RAM[401] RAM[402] RAM[3006] RAM[3012] RAM[3015] RAM[11]
+//  472         10       21      22       36          42      45       510 
+
+set sp 256
+set local 300
+set argument 400
+set this 3000
+set that 3010
+push constant 10
+pop local 0
+push constant 21
+push constant 22
+pop argument 2
+pop argument 1
+push constant 36
+pop this 6
+push constant 42
+push constant 45
+pop that 5
+pop that 2
+push constant 510
+pop temp 6
+push local 0
+push that 5
+add
+push argument 1
+sub
+push this 6
+push this 6
+add
+sub
+push temp 6
+add
+end
