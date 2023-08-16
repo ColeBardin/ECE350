@@ -28,4 +28,4 @@ if [ -d "test" ] ; then
 fi
 
 echo "$c files assembled"
-echo "$s/$t tests passed"
+echo "$s/$t comparison tests passed"
