@@ -4,6 +4,7 @@
 
 typedef struct Expr Expr;
 typedef struct ExprList ExprList;
+typedef struct KeyVal KeyVal;
 
 enum CmdType {
 	CMD_PUSH,
@@ -45,6 +46,12 @@ struct ExprList {
 	Expr *head;
 };
 
+struct KeyVal {
+	char key[64];
+	int val;
+};
+
+void procToks(int tokc, char **toks, ExprList *l);
 void parse(ExprList *l, FILE *fp);
 int tokenize(char *s, char *toks[], int max);
 ExprList *newExprList();

@@ -7,6 +7,26 @@
 #define BUFSIZE 512
 #define MAXTOKS 256
 
+KeyVal ops[] = {
+	{"push", CMD_PUSH},
+	{"pop", CMD_POP},	
+	{"set", CMD_SET},	
+	{"end", CMD_END},	
+	{"add", CMD_ADD},	
+	{"sub", CMD_SUB},	
+	{"neg", CMD_NEG},	
+	{"eq", CMD_EQ},	
+	{"gt", CMD_GT},	
+	{"lt", CMD_LT},	
+	{"and", CMD_AND},	
+	{"or", CMD_OR},	
+	{"not", CMD_NOT},	
+};
+
+KeyVal segs[] = {
+	{"sp", SEG_SP},
+};
+
 int main(int argc, char **argv){
 	FILE *fp;
 	ExprList *exprList;
@@ -69,11 +89,37 @@ void parse(ExprList *l, FILE *fp){
 		}
 		
 		n = tokenize(p, toks, MAXTOKS);
-		
+		if(n == 0 || (n == 1 && toks[0] == NULL)) continue;
+		procToks(n, toks, l);
 	}
 	
 }
 
+void procToks(int tokc, char **toks, ExprList *l){
+	KeyVal op;
+	int i, nOps;	
+	enum CmdType cmd;
+	enum SegType seg;
+	uint16_t val;
+
+	seg = SEG_NULL;
+	val = 0;
+
+	nOps = sizeof(ops) / sizeof(KeyVal);
+	for(i = 0; i < nOps; i++){
+		if(!strcmp(toks[0], ops[i].key)){
+			cmd = ops[i].val;
+		}
+	}	
+	
+	if(cmd == CMD_PUSH || cmd == CMD_POP || cmd == CMD_SET){
+
+
+	}
+	
+	addExpr(l, cmd, seg, val);
+}
+	
 int tokenize(char *s, char *toks[], int max){
 	int i;
 
