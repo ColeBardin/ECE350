@@ -26,11 +26,11 @@ enum SegType {
 	SEG_SP = 0,
 	SEG_LCL,
 	SEG_ARG,
-	SEG_POINTER,
+	SEG_PTR,
 	SEG_THIS = 3,
 	SEG_THAT,
 	SEG_TEMP,
-	SEG_STATIC = 16,
+	SEG_STAT = 16,
 	SEG_CONST,
 	SEG_NULL,
 };
@@ -51,6 +51,7 @@ struct KeyVal {
 	int val;
 };
 
+void writeExprs(FILE *fp, ExprList *l);
 void procToks(int tokc, char **toks, ExprList *l);
 void parse(ExprList *l, FILE *fp);
 int tokenize(char *s, char *toks[], int max);
