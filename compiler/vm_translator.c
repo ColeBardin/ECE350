@@ -7,19 +7,20 @@
 #define BUFSIZE 512
 #define MAXTOKS 256
 
-void pushOp(FILE *fp, Expr *n);
-void popOp(FILE *fp, Expr *n);
-void setOp(FILE *fp, Expr *n);
-void endOp(FILE *fp, Expr *n);
-void addOp(FILE *fp, Expr *n);
-void subOp(FILE *fp, Expr *n);
-void negOp(FILE *fp, Expr *n);
-void eqOp(FILE *fp, Expr *n);
-void gtOp(FILE *fp, Expr *n);
-void ltOp(FILE *fp, Expr *n);
-void andOp(FILE *fp, Expr *n);
-void orOp(FILE *fp, Expr *n);
-void notOp(FILE *fp, Expr *n);
+void push(FILE *fp, Expr *n);
+void pop(FILE *fp, Expr *n);
+void set(FILE *fp, Expr *n);
+void end(FILE *fp, Expr *n);
+void add(FILE *fp, Expr *n);
+void sub(FILE *fp, Expr *n);
+void neg(FILE *fp, Expr *n);
+void eq(FILE *fp, Expr *n);
+void gt(FILE *fp, Expr *n);
+void lt(FILE *fp, Expr *n);
+void and(FILE *fp, Expr *n);
+void or(FILE *fp, Expr *n);
+void not(FILE *fp, Expr *n);
+void popRelational(FILE *fp);
 
 KeyVal ops[] = {
 	{"push", CMD_PUSH},
@@ -50,19 +51,19 @@ KeyVal segs[] = {
 };
 
 void (* cmds[])(FILE *fp, Expr *n) = {
-	&pushOp,
-	&popOp,
-	&setOp,
-	&endOp,
-	&addOp,
-	&subOp,
-	&negOp,
-	&eqOp,
-	&gtOp,
-	&ltOp,
-	&andOp,
-	&orOp,
-	&notOp
+	&push,
+	&pop,
+	&set,
+	&end,
+	&add,
+	&sub,
+	&neg,
+	&eq,
+	&gt,
+	&lt,
+	&and,
+	&or,
+	&not
 };
 
 char line[128];
@@ -248,7 +249,7 @@ int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, uint16_t val){
 	return 0;
 }
 
-void pushOp(FILE *fp, Expr *n){
+void push(FILE *fp, Expr *n){
 	if(n->seg == SEG_CONST){
 		sprintf(line, "@%d\nD=A\n", n->val);
 		fwrite(line, strlen(line), 1, fp);
@@ -272,7 +273,7 @@ void pushOp(FILE *fp, Expr *n){
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void popOp(FILE *fp, Expr *n){
+void pop(FILE *fp, Expr *n){
 	sprintf(line, "@%d\nD=M\n", n->seg);
 	fwrite(line, strlen(line), 1, fp);
 
@@ -285,44 +286,35 @@ void popOp(FILE *fp, Expr *n){
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void setOp(FILE *fp, Expr *n){
-	sprintf(line, "@%d\n", n->val);
-	fwrite(line, strlen(line), 1, fp);
-
-	sprintf(line, "D=A\n");
-	fwrite(line, strlen(line), 1, fp);
-
-	sprintf(line, "@%d\n", n->seg);
-	fwrite(line, strlen(line), 1, fp);
-	
-	sprintf(line, "M=D\n");
+void set(FILE *fp, Expr *n){
+	sprintf(line, "@%d\nD=A\n@%d\nM=D\n", n->val, n->seg);
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void endOp(FILE *fp, Expr *n){
+void end(FILE *fp, Expr *n){
 	sprintf(line, "(EXIT)\n@EXIT\n0;JMP\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void addOp(FILE *fp, Expr *n){
+void add(FILE *fp, Expr *n){
 	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void subOp(FILE *fp, Expr *n){
+void sub(FILE *fp, Expr *n){
 	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void negOp(FILE *fp, Expr *n){
-
+void neg(FILE *fp, Expr *n){
+	sprintf(line, "@SP\nM=M-1\nA=M\nM=-M\n");
+	fwrite(line, strlen(line), 1, fp);
 }
 
-void eqOp(FILE *fp, Expr *n){
+void eq(FILE *fp, Expr *n){
 	static int eq = 0;
 
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
-	fwrite(line, strlen(line), 1, fp);
+	popRelational(fp);
 
 	sprintf(line, "@IF_EQ_%d\nD;JEQ\n@SP\nA=M\nM=0\n", eq);
 	fwrite(line, strlen(line), 1, fp);
@@ -339,11 +331,10 @@ void eqOp(FILE *fp, Expr *n){
 	eq++;
 }
 
-void gtOp(FILE *fp, Expr *n){
+void gt(FILE *fp, Expr *n){
 	static int gt = 0;
-
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
-	fwrite(line, strlen(line), 1, fp);
+	
+	popRelational(fp);
 
 	sprintf(line, "@IF_GT_%d\nD;JGT\n@SP\nA=M\nM=0\n", gt);
 	fwrite(line, strlen(line), 1, fp);
@@ -360,11 +351,10 @@ void gtOp(FILE *fp, Expr *n){
 	gt++;
 }
 
-void ltOp(FILE *fp, Expr *n){
+void lt(FILE *fp, Expr *n){
 	static int lt = 0;
 
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
-	fwrite(line, strlen(line), 1, fp);
+	popRelational(fp);
 
 	sprintf(line, "@IF_LT_%d\nD;JLT\n@SP\nA=M\nM=0\n", lt);
 	fwrite(line, strlen(line), 1, fp);
@@ -381,15 +371,19 @@ void ltOp(FILE *fp, Expr *n){
 	lt++;
 }
 
-void andOp(FILE *fp, Expr *n){
+void and(FILE *fp, Expr *n){
 
 }
 
-void orOp(FILE *fp, Expr *n){
+void or(FILE *fp, Expr *n){
 
 }
 
-void notOp(FILE *fp, Expr *n){
+void not(FILE *fp, Expr *n){
 
 }
 
+void popRelational(FILE *fp){
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
+	fwrite(line, strlen(line), 1, fp);
+}
