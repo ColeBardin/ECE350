@@ -386,7 +386,8 @@ void or(FILE *fp, Expr *n){
 }
 
 void not(FILE *fp, Expr *n){
-
+	sprintf(line, "@SP\nA=M-1\nM=!M\n@SP\nM=M+1");
+	fwrite(line, strlen(line), 1, fp);
 }
 
 void pop2(FILE *fp){
