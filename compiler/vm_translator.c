@@ -268,7 +268,7 @@ void pushOp(FILE *fp, Expr *n){
 		fwrite(line, strlen(line), 1, fp);
 	}
 
-	sprintf(line, "@SP\nA=M\nM=D\n@SP\nM=M+1");
+	sprintf(line, "@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
@@ -281,7 +281,7 @@ void popOp(FILE *fp, Expr *n){
 		fwrite(line, strlen(line), 1, fp);
 	}
 
-	sprintf(line, "@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D");
+	sprintf(line, "@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
@@ -300,17 +300,17 @@ void setOp(FILE *fp, Expr *n){
 }
 
 void endOp(FILE *fp, Expr *n){
-	sprintf(line, "(EXIT)\n@EXIT\n0;JMP");
+	sprintf(line, "(EXIT)\n@EXIT\n0;JMP\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
 void addOp(FILE *fp, Expr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1");
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
 void subOp(FILE *fp, Expr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1");
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
@@ -319,15 +319,66 @@ void negOp(FILE *fp, Expr *n){
 }
 
 void eqOp(FILE *fp, Expr *n){
+	static int eq = 0;
 
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "@IF_EQ_%d\nD;JEQ\n@SP\nA=M\nM=0\n", eq);
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "@END_IF_EQ_%d\n0;JMP\n", eq);
+	fwrite(line, strlen(line), 1, fp);
+        
+	sprintf(line, "(IF_EQ_%d)\n@SP\nA=M\nM=-1\n", eq);
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "(END_IF_EQ_%d)\n@SP\nM=M+1\n", eq);
+	fwrite(line, strlen(line), 1, fp);
+
+	eq++;
 }
 
 void gtOp(FILE *fp, Expr *n){
+	static int gt = 0;
 
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "@IF_GT_%d\nD;JGT\n@SP\nA=M\nM=0\n", gt);
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "@END_IF_GT_%d\n0;JMP\n", gt);
+	fwrite(line, strlen(line), 1, fp);
+        
+	sprintf(line, "(IF_GT_%d)\n@SP\nA=M\nM=-1\n", gt);
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "(END_IF_GT_%d)\n@SP\nM=M+1\n", gt);
+	fwrite(line, strlen(line), 1, fp);
+
+	gt++;
 }
 
 void ltOp(FILE *fp, Expr *n){
+	static int lt = 0;
 
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "@IF_LT_%d\nD;JLT\n@SP\nA=M\nM=0\n", lt);
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "@END_IF_LT_%d\n0;JMP\n", lt);
+	fwrite(line, strlen(line), 1, fp);
+        
+	sprintf(line, "(IF_LT_%d)\n@SP\nA=M\nM=-1\n", lt);
+	fwrite(line, strlen(line), 1, fp);
+
+	sprintf(line, "(END_IF_LT_%d)\n@SP\nM=M+1\n", lt);
+	fwrite(line, strlen(line), 1, fp);
+
+	lt++;
 }
 
 void andOp(FILE *fp, Expr *n){
