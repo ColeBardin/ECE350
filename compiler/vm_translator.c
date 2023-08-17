@@ -20,7 +20,7 @@ void lt(FILE *fp, Expr *n);
 void and(FILE *fp, Expr *n);
 void or(FILE *fp, Expr *n);
 void not(FILE *fp, Expr *n);
-void popRelational(FILE *fp);
+void pop2(FILE *fp);
 
 KeyVal ops[] = {
 	{"push", CMD_PUSH},
@@ -314,9 +314,9 @@ void neg(FILE *fp, Expr *n){
 void eq(FILE *fp, Expr *n){
 	static int eq = 0;
 
-	popRelational(fp);
+	pop2(fp);
 
-	sprintf(line, "@IF_EQ_%d\nD;JEQ\n@SP\nA=M\nM=0\n", eq);
+	sprintf(line, "D=M-D\n@IF_EQ_%d\nD;JEQ\n@SP\nA=M\nM=0\n", eq);
 	fwrite(line, strlen(line), 1, fp);
 
 	sprintf(line, "@END_IF_EQ_%d\n0;JMP\n", eq);
@@ -334,9 +334,9 @@ void eq(FILE *fp, Expr *n){
 void gt(FILE *fp, Expr *n){
 	static int gt = 0;
 	
-	popRelational(fp);
+	pop2(fp);
 
-	sprintf(line, "@IF_GT_%d\nD;JGT\n@SP\nA=M\nM=0\n", gt);
+	sprintf(line, "D=M-D\n@IF_GT_%d\nD;JGT\n@SP\nA=M\nM=0\n", gt);
 	fwrite(line, strlen(line), 1, fp);
 
 	sprintf(line, "@END_IF_GT_%d\n0;JMP\n", gt);
@@ -354,9 +354,9 @@ void gt(FILE *fp, Expr *n){
 void lt(FILE *fp, Expr *n){
 	static int lt = 0;
 
-	popRelational(fp);
+	pop2(fp);
 
-	sprintf(line, "@IF_LT_%d\nD;JLT\n@SP\nA=M\nM=0\n", lt);
+	sprintf(line, "D=M-D\n@IF_LT_%d\nD;JLT\n@SP\nA=M\nM=0\n", lt);
 	fwrite(line, strlen(line), 1, fp);
 
 	sprintf(line, "@END_IF_LT_%d\n0;JMP\n", lt);
@@ -372,18 +372,24 @@ void lt(FILE *fp, Expr *n){
 }
 
 void and(FILE *fp, Expr *n){
+	pop2(fp);
 
+	sprintf(line, "D=D&M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	fwrite(line, strlen(line), 1, fp);
 }
 
 void or(FILE *fp, Expr *n){
+	pop2(fp);
 
+	sprintf(line, "D=D|M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	fwrite(line, strlen(line), 1, fp);
 }
 
 void not(FILE *fp, Expr *n){
 
 }
 
-void popRelational(FILE *fp){
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n");
+void pop2(FILE *fp){
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\n");
 	fwrite(line, strlen(line), 1, fp);
 }
