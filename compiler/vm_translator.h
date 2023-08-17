@@ -39,7 +39,7 @@ struct Expr {
 	Expr *next;
 	enum CmdType cmd;	
 	enum SegType seg;	
-	uint16_t val;	
+	int val;	
 };
 
 struct ExprList {
@@ -57,4 +57,4 @@ void parse(ExprList *l, FILE *fp);
 int tokenize(char *s, char *toks[], int max);
 ExprList *newExprList();
 int deleteExprList(ExprList *l);
-int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, uint16_t val);
+int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val);

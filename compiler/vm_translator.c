@@ -117,6 +117,7 @@ void writeExprs(FILE *fp, ExprList *l){
 	Expr *n;
 
 	for(n = l->head; n != NULL; n = n->next){
+		//printf("%d, %d, %d\n", n->cmd, n->seg, n->val);
 		cmds[n->cmd](fp, n);
 	}
 }
@@ -148,6 +149,7 @@ void procToks(int tokc, char **toks, ExprList *l){
 			}
 		}
 		val = atoi(toks[2]);
+		//printf("tok:%s %s %s, %d\n",toks[0], toks[1], toks[2], val);
 	}
 	
 	addExpr(l, cmd, seg, val);
@@ -174,9 +176,7 @@ void parse(ExprList *l, FILE *fp){
 		if(i == len) continue;
 		if(p[0] == '/' && p[1] == '/') continue;
 		c = strchr(p, '/');
-		if(c != NULL){
-			if(*(c+1) == '/') *p = '\0';
-		}
+		if(c != NULL) *c = '\0';
 		
 		n = tokenize(p, toks, MAXTOKS);
 		if(n == 0 || (n == 1 && toks[0] == NULL)) continue;
@@ -224,7 +224,7 @@ int deleteExprList(ExprList *l){
 	return i;
 }
 
-int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, uint16_t val){
+int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val){
 	Expr *new, *p;
 
 	if(l == NULL) return -1;
