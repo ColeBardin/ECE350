@@ -386,7 +386,7 @@ void or(FILE *fp, Expr *n){
 }
 
 void not(FILE *fp, Expr *n){
-	sprintf(line, "@SP\nA=M-1\nM=!M\n@SP\nM=M+1");
+	sprintf(line, "@SP\nA=M-1\nM=!M\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
