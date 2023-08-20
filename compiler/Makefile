@@ -1,7 +1,7 @@
-all: vm_translator
+all: vmt
 
-vm_translator: vm_translator.c
-	cc -o vm_translator vm_translator.c
+vmt: vmt.c
+	cc -o vmt vmt.c
 
 clear:
-	rm *.o vm_translator
+	rm *.o vmt 
