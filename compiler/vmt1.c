@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "vmt.h"
+#include "vmt1.h"
 
 #define BUFSIZE 512
 #define MAXTOKS 256

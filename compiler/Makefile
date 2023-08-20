@@ -1,7 +1,7 @@
-all: vmt
+all: vmt1
 
-vmt: vmt.c
-	cc -o vmt vmt.c
+vmt1: vmt1.c
+	cc -o vmt1 vmt1.c
 
 clear:
-	rm *.o vmt 
+	rm *.o vmt1
