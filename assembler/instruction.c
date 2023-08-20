@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-const int numComps = 30;
-const int compThresh = 19;
+const int numComps = 34;
+const int compThresh = 21;
 KeyVal comps[] = {
 {"0",COMP_0},
 {"1",COMP_1},
@@ -23,7 +23,9 @@ KeyVal comps[] = {
 {"D-A",COMP_D_MINUS_AM},
 {"A-D",COMP_AM_MINUS_D},
 {"D&A",COMP_D_AND_AM},
+{"A&D",COMP_D_AND_AM},
 {"D|A",COMP_D_OR_AM},
+{"A|D",COMP_D_OR_AM},
 {"M",COMP_AM},
 {"!M",COMP_NOT_AM},
 {"-M",COMP_NEG_AM},
@@ -34,7 +36,9 @@ KeyVal comps[] = {
 {"D-M",COMP_D_MINUS_AM},
 {"M-D",COMP_AM_MINUS_D},
 {"D&M",COMP_D_AND_AM},
-{"D|M",COMP_D_OR_AM}};
+{"M&D",COMP_D_AND_AM},
+{"D|M",COMP_D_OR_AM},
+{"M|D",COMP_D_OR_AM}};
 
 KeyVal jumps[] = {
 {"", JMP_NULL},
