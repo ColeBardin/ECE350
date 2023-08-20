@@ -26,11 +26,11 @@ enum SegType {
 	SEG_SP = 0,
 	SEG_LCL,
 	SEG_ARG,
-	SEG_PTR,
-	SEG_THIS = 3,
+	SEG_THIS,
 	SEG_THAT,
 	SEG_TEMP,
 	SEG_STAT = 16,
+	SEG_PTR,
 	SEG_CONST,
 	SEG_NULL,
 };

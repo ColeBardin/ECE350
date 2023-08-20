@@ -253,15 +253,23 @@ void push(FILE *fp, Expr *n){
 	if(n->seg == SEG_CONST){
 		sprintf(line, "@%d\nD=A\n", n->val);
 		fwrite(line, strlen(line), 1, fp);
-	}else{
-		sprintf(line, "@%d\n", n->seg);
-		fwrite(line, strlen(line), 1, fp);
-		
-		if(n->val != 0){
-			sprintf(line, "D=M\n@%d\nA=D+A\n", n->val);
+	}else{	
+		if(n->seg == SEG_PTR){
+			sprintf(line, "@%d\nD=A\n", SEG_THIS);
+			fwrite(line, strlen(line), 1, fp);
+		}else if(n->seg == SEG_TEMP){
+			sprintf(line, "@%d\nD=A\n", n->seg);
 			fwrite(line, strlen(line), 1, fp);
 		}else{
-			sprintf(line, "A=M\n");
+			sprintf(line, "@%d\nD=M\n", n->seg);
+			fwrite(line, strlen(line), 1, fp);
+		}
+
+		if(n->val != 0){
+			sprintf(line, "@%d\nA=D+A\n", n->val);
+			fwrite(line, strlen(line), 1, fp);
+		}else{
+			sprintf(line, "A=D\n");
 			fwrite(line, strlen(line), 1, fp);
 		}
 
@@ -274,8 +282,16 @@ void push(FILE *fp, Expr *n){
 }
 
 void pop(FILE *fp, Expr *n){
-	sprintf(line, "@%d\nD=M\n", n->seg);
-	fwrite(line, strlen(line), 1, fp);
+	if(n->seg == SEG_TEMP){
+		sprintf(line, "@%d\nD=A\n", n->seg);
+		fwrite(line, strlen(line), 1, fp);
+	}else if(n->seg == SEG_PTR){
+		sprintf(line, "@%d\nD=A\n", SEG_THIS);
+		fwrite(line, strlen(line), 1, fp);
+	}else{
+		sprintf(line, "@%d\nD=M\n", n->seg);
+		fwrite(line, strlen(line), 1, fp);
+	}
 
 	if(n->val != 0){
 		sprintf(line, "@%d\nD=D+A\n", n->val);
@@ -297,17 +313,21 @@ void end(FILE *fp, Expr *n){
 }
 
 void add(FILE *fp, Expr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	pop2(fp);
+
+	sprintf(line, "D=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
 void sub(FILE *fp, Expr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	pop2(fp);
+
+	sprintf(line, "D=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
 void neg(FILE *fp, Expr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nM=-M\n");
+	sprintf(line, "@SP\nM=M-1\nA=M\nM=-M\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
