@@ -66,4 +66,5 @@ ExprList *newExprList();
 int deleteExprList(ExprList *l);
 int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name);
 void translateFile(char *dir, char *file);
+void assembleFinal(char *fno, char *dir, char files[64][64], int nfiles);
 

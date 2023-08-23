@@ -110,7 +110,6 @@ int main(int argc, char **argv){
 
 	dir = argv[2];
 	
-	
 	if((dfd = opendir(dir)) == NULL){
 		perror("Failed to open directory");
 		exit(1);
@@ -142,6 +141,70 @@ int main(int argc, char **argv){
 	for(i=0; i < nFiles; i++){
 		translateFile(dir, files[i]);
 	}
+
+	strcpy(fn, argv[1]);
+	assembleFinal(fn, dir, files, nFiles);	
+}
+
+void assembleFinal(char *fno, char *dir, char files[64][64], int nfiles){
+	FILE *fpo;
+	FILE *fp;
+	char *p;
+	int i;
+	char c;
+	char fn[64];
+
+	sprintf(fn, "%s/%s", dir, fno);
+	printf("Creating %s\n", fn);
+	fpo = fopen(fn, "w");
+	if(fpo == NULL){
+		perror("Failed to open output asm file");
+		return;
+	}
+	
+	sprintf(fn, "%s/%s", dir, "sys.i");	
+	fp = fopen(fn, "r");
+	if(fp == NULL){
+		perror("Failed to open sys.i");
+		return;
+	}
+	c = fgetc(fp);
+	while(c != EOF){
+		fputc(c, fpo);
+		c = fgetc(fp);
+	}
+	fclose(fp);
+
+	sprintf(fn, "%s/%s", dir, "main.i");	
+	fp = fopen(fn, "r");
+	if(fp == NULL){
+		perror("Failed to open main.i");
+		return;
+	}
+	c = fgetc(fp);
+	while(c != EOF){
+		fputc(c, fpo);
+		c = fgetc(fp);
+	}
+	fclose(fp);
+	
+	for(i = 0; i < nfiles; i++){
+		p = strrchr(files[i], '.');
+		strcpy(p, ".i");
+		sprintf(fn, "%s/%s", dir, files[i]);	
+		fp = fopen(fn, "r");
+		if(fp == NULL){
+			perror("Failed to open main.i");
+			return;
+		}
+		c = fgetc(fp);
+		while(c != EOF){
+			fputc(c, fpo);
+			c = fgetc(fp);
+		}
+		fclose(fp);
+	}
+	fclose(fpo);
 }
 
 void translateFile(char *dir, char *file){
