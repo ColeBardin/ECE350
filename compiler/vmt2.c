@@ -27,6 +27,7 @@ void ret(FILE *fp, Expr *n);
 void ifgt(FILE *fp, Expr *n);
 void go2(FILE *fp, Expr *n);
 void label(FILE *fp, Expr *n);
+void pushString(FILE *fp, char *s);
 void pop2(FILE *fp);
 
 KeyVal ops[] = {
@@ -547,17 +548,72 @@ void not(FILE *fp, Expr *n){
 }
 
 void func(FILE *fp, Expr *n){
-	sprintf(line, "FUNC %s %d\n", n->name, n->val);
+	int i;
+	sprintf(line, "(%s)\n", n->name);
 	fwrite(line, strlen(line), 1, fp);
+	for(i = 0; i < n->val; i++){
+		sprintf(line, "@0\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+		fwrite(line, strlen(line), 1, fp);
+	}
 }
 
 void call(FILE *fp, Expr *n){
-	sprintf(line, "CALL %s %d\n", n->name, n->val);
+	static int cnt = 0;
+	
+	// Push RET ADDR
+	sprintf(line, "@RET_ADDR_%d\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", cnt);
+	fwrite(line, strlen(line), 1, fp);
+	// Push LCL
+	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_LCL);
+	fwrite(line, strlen(line), 1, fp);
+	// Push ARG
+	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_ARG);
+	fwrite(line, strlen(line), 1, fp);
+	// Push THIS
+	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_THIS);
+	fwrite(line, strlen(line), 1, fp);
+	// Push THAT
+	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_THAT);
+	fwrite(line, strlen(line), 1, fp);
+	// ARG = SP - 5 - n
+	sprintf(line, "@SP\nD=M\n@%d\nD=D-A\n@%d\nM=D\n", 5 + n->val, SEG_ARG);
+	fwrite(line, strlen(line), 1, fp);
+	// LCL = SP
+	sprintf(line, "@SP\nD=M\n@%d\nM=D\n", SEG_LCL);
+	fwrite(line, strlen(line), 1, fp);
+	go2(fp, n);
+	// Print return label
+	sprintf(line, "(RET_ADDR_%d)\n", cnt++);
 	fwrite(line, strlen(line), 1, fp);
 }
 
 void ret(FILE *fp, Expr *n){
-	sprintf(line, "RETURN\n");
+	// FRAME = LCL
+	sprintf(line, "@%d\nD=M\n@R14\nM=D\n", SEG_LCL);
+	fwrite(line, strlen(line), 1, fp);
+	// RET = *(FRAME - 5)
+	sprintf(line, "@R14\nD=M\n@5\nA=D-A\nD=M\n@R15\nM=D\n");
+	fwrite(line, strlen(line), 1, fp);
+	// *ARG = pop()
+	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@%d\nA=M\nM=D\n", SEG_ARG);
+	fwrite(line, strlen(line), 1, fp);
+	// SP = ARG + 1
+	sprintf(line, "@%d\nD=M+1\n@SP\nM=D\n", SEG_ARG);
+	fwrite(line, strlen(line), 1, fp);
+	// THAT = *(FRAME - 1)
+	sprintf(line, "@R14\nD=M\n@1\nA=D-A\nD=M\n@%d\nM=D\n", SEG_THAT);
+	fwrite(line, strlen(line), 1, fp);
+	// THIS = *(FRAME - 2)
+	sprintf(line, "@R14\nD=M\n@2\nA=D-A\nD=M\n@%d\nM=D\n", SEG_THIS);
+	fwrite(line, strlen(line), 1, fp);
+	// ARG = *(FRAME - 3)
+	sprintf(line, "@R14\nD=M\n@3\nA=D-A\nD=M\n@%d\nM=D\n", SEG_ARG);
+	fwrite(line, strlen(line), 1, fp);
+	// LCL = *(FRAME - 4)
+	sprintf(line, "@R14\nD=M\n@4\nA=D-A\nD=M\n@%d\nM=D\n", SEG_LCL);
+	fwrite(line, strlen(line), 1, fp);
+	// goto RET
+	sprintf(line, "@R15\nA=M\n0;JMP\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
@@ -573,6 +629,11 @@ void go2(FILE *fp, Expr *n){
 
 void label(FILE *fp, Expr *n){
 	sprintf(line, "(%s)\n", n->name);
+	fwrite(line, strlen(line), 1, fp);
+}
+
+void pushString(FILE *fp, char *s){
+	sprintf(line, "@%s\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", s);
 	fwrite(line, strlen(line), 1, fp);
 }
 
