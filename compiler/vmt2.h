@@ -65,3 +65,5 @@ int tokenize(char *s, char *toks[], int max);
 ExprList *newExprList();
 int deleteExprList(ExprList *l);
 int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name);
+void translateFile(char *dir, char *file);
+
