@@ -147,6 +147,24 @@ int main(int argc, char **argv){
 	assembleFinal(fn, dir, files, nFiles);	
 }
 
+int fileAppend(FILE *dest, char *source_fn){
+	FILE *fp;
+	char c;
+
+	fp = fopen(source_fn, "r");
+	if(fp == NULL){
+		perror("Failed to open '%s'");
+		return -1;
+	}
+	c = fgetc(fp);
+	while(c != EOF){
+		fputc(c, dest);
+		c = fgetc(fp);
+	}
+	fclose(fp);
+	return 0;
+}
+
 void assembleFinal(char *fno, char *dir, char files[64][64], int nfiles){
 	FILE *fpo;
 	FILE *fp;
@@ -164,46 +182,16 @@ void assembleFinal(char *fno, char *dir, char files[64][64], int nfiles){
 	}
 	
 	sprintf(fn, "%s/%s", dir, "sys.i");	
-	fp = fopen(fn, "r");
-	if(fp == NULL){
-		perror("Failed to open sys.i");
-		return;
-	}
-	c = fgetc(fp);
-	while(c != EOF){
-		fputc(c, fpo);
-		c = fgetc(fp);
-	}
-	fclose(fp);
+	if(fileAppend(fpo, fn) < 0) return;
 
 	sprintf(fn, "%s/%s", dir, "main.i");	
-	fp = fopen(fn, "r");
-	if(fp == NULL){
-		perror("Failed to open main.i");
-		return;
-	}
-	c = fgetc(fp);
-	while(c != EOF){
-		fputc(c, fpo);
-		c = fgetc(fp);
-	}
-	fclose(fp);
+	if(fileAppend(fpo, fn) < 0) return;
 	
 	for(i = 0; i < nfiles; i++){
 		p = strrchr(files[i], '.');
 		strcpy(p, ".i");
 		sprintf(fn, "%s/%s", dir, files[i]);	
-		fp = fopen(fn, "r");
-		if(fp == NULL){
-			perror("Failed to open main.i");
-			return;
-		}
-		c = fgetc(fp);
-		while(c != EOF){
-			fputc(c, fpo);
-			c = fgetc(fp);
-		}
-		fclose(fp);
+		if(fileAppend(fpo, fn) < 0) return;
 	}
 	fclose(fpo);
 }
@@ -314,23 +302,23 @@ void parse(ExprList *l, FILE *fp){
 		c = strchr(p, '/');
 		if(c != NULL) *c = '\0';
 		
-		n = tokenize(p, toks, MAXTOKS);
+		n = tokenize(p, toks, " \t", MAXTOKS);
 		if(n == 0 || (n == 1 && toks[0] == NULL)) continue;
 		procToks(n, toks, l);
 	}
 	
 }
 
-int tokenize(char *s, char *toks[], int max){
+int tokenize(char *s, char *toks[], char *delim, int max){
 	int i;
 
 	i = 0;
-	toks[i] = strtok(s, " \t"); 
+	toks[i] = strtok(s, delim); 
 	while(toks[i++] != NULL){
 		if(i >= max - 1){
 			toks[i] = NULL;
 		}else{
-			toks[i] = strtok(NULL, " \t");
+			toks[i] = strtok(NULL, delim);
 		}
 	}
 	return i;

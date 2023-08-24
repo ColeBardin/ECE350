@@ -61,10 +61,11 @@ struct KeyVal {
 void writeExprs(FILE *fp, ExprList *l);
 void procToks(int tokc, char **toks, ExprList *l);
 void parse(ExprList *l, FILE *fp);
-int tokenize(char *s, char *toks[], int max);
+int tokenize(char *s, char *toks[], char *delim, int max);
 ExprList *newExprList();
 int deleteExprList(ExprList *l);
 int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name);
 void translateFile(char *dir, char *file);
 void assembleFinal(char *fno, char *dir, char files[64][64], int nfiles);
+int fileAppend(FILE *dest, char *source_fn);
 
