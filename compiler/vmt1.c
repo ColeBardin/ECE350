@@ -117,7 +117,6 @@ void writeExprs(FILE *fp, ExprList *l){
 	Expr *n;
 
 	for(n = l->head; n != NULL; n = n->next){
-		//printf("%d, %d, %d\n", n->cmd, n->seg, n->val);
 		cmds[n->cmd](fp, n);
 	}
 }
@@ -149,7 +148,6 @@ void procToks(int tokc, char **toks, ExprList *l){
 			}
 		}
 		val = atoi(toks[2]);
-		//printf("tok:%s %s %s, %d\n",toks[0], toks[1], toks[2], val);
 	}
 	
 	addExpr(l, cmd, seg, val);
