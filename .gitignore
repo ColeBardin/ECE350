@@ -1,5 +1,9 @@
 *.asv
 *.out
 *.swp
+.*.swp
 *.DS_Store
 *.zip
+assembler/asm
+compiler/vmt1
+compiler/vmt2
