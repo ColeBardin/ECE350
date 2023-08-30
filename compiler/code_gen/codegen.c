@@ -5,19 +5,16 @@
 #include "codegen.h"
 
 KeyVal allToks[] = {
-	{"INTEGER", INT},
-	{"PLUS", PLUS},
-	{"MINUS", MINUS},
-	{"MULT", MULT},
-	{"DIV", DIV},
+	{"+", PLUS},
+	{"-", MINUS},
+	{"*", MULT},
+	{"/", DIV},
 	{"(", LPAREN},
 	{")", RPAREN},
 	{"{", LCURLY},
 	{"}", RCURLY},
 	{"=", ASSIGN},
 	{";", SEMI},
-	{"ID", ID},
-	{"EOF", END},
 };
 
 int main(int argc, char **argv){
@@ -41,8 +38,20 @@ int main(int argc, char **argv){
 		perror("Failed to open input file");
 		exit(1);
 	}
+
+	TokL = newTokList();
+	if(TokL == NULL){
+		fprintf(stderr, "Failed to create token list\n");
+		exit(1);
+	}
 	
+	puts("scanning");
 	ret = scan(fp, TokL);	
+	TokNode *c;
+	puts("tokens");
+	for(c = TokL->head; c != NULL; c = c->next){
+		printf("%d: |%s|\n", c->tok, c->name);
+	}
 	// SCAN
 	// PARSE
 	// AST
@@ -54,19 +63,69 @@ int main(int argc, char **argv){
 
 int scan(FILE *fp, TokList *list){
 	char c;
+	char exp[64];
+	int nToks, i;
+
+	nToks = sizeof(allToks) / sizeof(KeyVal);
 
 	while((c = fgetc(fp)) != EOF){
-		switch (c){
-			case ' ':
-			case '\t':	
-			case '\n':
-			case '\r':
-				break;
-			default:
-				break;
+		if(c == ' ' || c == '\t' || c == '\n' || c == '\r'){
+			continue;
+		}else{
+			for(i = 0; i < nToks; i++){
+				if(c == allToks[i].key[0]){
+					addTok(list, allToks[i].val, allToks[i].key);
+					break;
+				}
+			}
+			if(i == nToks){
+				exp[0] = c;
+				if(getVarOrInt(fp, exp, 64) == -1){
+					fprintf(stderr, "Failed parsing input file\n");
+					exit(2);
+				}
+				if(exp[0] > '9' || exp[0] < '0'){
+					// Variable name
+					addTok(list, ID, exp);
+				}else{
+					// Integer
+					addTok(list, INT, exp);
+				}
+			}
 		}
 	}	
+	addTok(list, END, "EOF");
 	return 0;
+}
+
+int getVarOrInt(FILE *fp, char *dest, int size){
+	char c;
+	int nToks, i, n;
+
+	i = 1;
+	nToks = sizeof(allToks) / sizeof(KeyVal);
+
+	while((c = fgetc(fp)) != EOF){
+		if(c == ' ' || c == '\t' || c == '\n' || c == '\r'){
+			dest[i] = '\0';
+			return i;
+		}else{
+			for(n = 0; n < nToks; n++){
+				if(c == allToks[n].key[0]){
+					fseek(fp, -1L, SEEK_CUR);
+					dest[i] = '\0';
+					return i;
+				}
+			}
+			if(i == size - 1){
+				dest[i] = '\0';
+				return -1;
+			}else{
+				dest[i] = c;
+				i++;
+			}
+		}
+	}
 }
 
 TokList *newTokList(){

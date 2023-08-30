@@ -8,7 +8,6 @@ typedef struct TokNode TokNode;
 typedef struct VarNode VarNode;
 
 enum TokType {
-	INT,
 	PLUS,
 	MINUS,
 	MULT,
@@ -19,6 +18,7 @@ enum TokType {
 	RCURLY,
 	ASSIGN,
 	SEMI,
+	INT,
 	ID,
 	END,
 };
@@ -47,4 +47,5 @@ TokList *newTokList();
 int addTok(TokList *l, enum TokType tok, char *name);
 int deleteTokList(TokList *l);
 int scan(FILE *fp, TokList *list);
+int getVarOrInt(FILE *fp, char *dest, int size);
 
