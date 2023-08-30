@@ -26,6 +26,7 @@ int main(int argc, char **argv){
 	char *fnin, *fnout;
 	FILE *fp;
 	TokList *TokL;
+	AST *ast;
 
 	if(argc < 3){
 		fprintf(stderr, "Usage: ./codegen filename.txt filename.vm\n");	
@@ -64,12 +65,15 @@ int main(int argc, char **argv){
 	}
 
 	// PARSE
-	if(parse(TokL) == -1){
+	ast = parse(TokL);
+	if(ast == NULL){
 		exit(2);
 	}
+
 	// AST
 	// VM OUT
 	
+	deleteAST(ast);
 	deleteTokList(TokL);
 	exit(0);
 }
@@ -102,6 +106,7 @@ int getVarOrInt(FILE *fp, char *dest, int size){
 			}
 		}
 	}
+	return i;
 }
 
 TokList *newTokList(){
@@ -194,23 +199,354 @@ int scan(FILE *fp, TokList *list){
 	return 0;
 }
 
-int parse(TokList *list){
+AST *parse(TokList *list){
+	AST *new;
+
+	puts("Creating AST");
 	if(list == NULL){
 		fprintf(stderr, "Parse received uninitialized token list\n");
-		return -1;
+		return NULL;
 	}
 	if(list->head == NULL){
 		fprintf(stderr, "Parse received empty token list\n");
-		return -1;
+		return NULL;
 	}
 
 	current = list->head;
 
+	new = malloc(sizeof(AST));
+	if(new == NULL){
+		perror("AST");
+		return NULL;
+	}
 
+	new->program = program();
+	if(new->program == NULL){
+		fprintf(stderr, "Failed to create program\n");
+		return NULL;
+	}
+
+	return new;
+}
+
+Program *program(){
+	Program *p;
+
+	puts("Creating program");
+	p = malloc(sizeof(Program));
+	if(p == NULL){
+		perror("Program");
+		return NULL;
+	}	
+
+	p->cs = compoundStatement();
+	if(p->cs == NULL){
+		fprintf(stderr, "Failed to create Compound Statement\n");
+		return NULL;
+	}
+
+	if(!consume(END)){
+		fprintf(stderr, "No EOF found\n");
+		return NULL;
+	}
+
+	return p;
+}
+
+CompoundStatement *compoundStatement(){
+	CompoundStatement *cs;
+
+	cs = malloc(sizeof(CompoundStatement));
+	if(cs == NULL){
+		perror("Compound Statement");
+		return NULL;
+	}
+
+	if(!consume(LCURLY)){
+		fprintf(stderr, "Missing {\n");
+		return NULL;
+	}
+	
+	cs->statements = getStatements();
+
+	if(!consume(RCURLY)){
+		fprintf(stderr, "Missing }\n");
+		return NULL;
+	}
+	return cs;
+}
+
+StatementList *getStatements(){
+	StatementList *sl;
+	Statement *s;
+	
+	sl = malloc(sizeof(StatementList));
+	if(sl == NULL){
+		perror("Statement List");
+		return NULL;
+	}
+	sl->head = NULL;
+	sl->tail = NULL;
+
+	s = statement();
+	sl->head = s;
+	sl->tail = s;
+	while(s != NULL){
+		s = statement();
+		if(s == NULL) break;
+		sl->tail->next = s;	
+		sl->tail = s;
+	}
+
+	return sl;
+}
+
+Statement *statement(){
+	Statement *s;
+
+	s = malloc(sizeof(Statement));
+	if(s == NULL){
+		perror("Statement");
+		return NULL;
+	}
+
+	s->next = NULL;
+
+	if(current->tok == LCURLY){
+		s->type = CMP_STATE;
+		s->cs = compoundStatement();
+	}else if(current->tok == ID){
+		s->type = ASSGN_STATE;
+		s->as = assignmentStatement();
+	}else{
+ 		return NULL;
+	}
+
+	return s;
+}
+
+AssignmentStatement *assignmentStatement(){
+	AssignmentStatement *a;
+	
+	a = malloc(sizeof(AssignmentStatement));
+	if(a == NULL){
+		perror("Assignment Statement\n");
+		return NULL;
+	}
+	strncpy(a->left, current->name, 64);
+	//printf("found: %s = ", a->left);
+	if(!consume(ID)){
+		fprintf(stderr, "Expected variable\n");
+		return NULL;
+	}
+
+	if(!consume(ASSIGN)){
+		fprintf(stderr, "Expected assignment operator\n");
+		return NULL;
+	}
+	
+	a->e = expression();
+	if(a->e == NULL){
+		return NULL;
+	}
+
+	if(!consume(SEMI)){
+		fprintf(stderr, "Expected semicolon\n");
+		return NULL;
+	}
+	//puts("");
+	return a;
+}
+
+Expression *expression(){
+	Expression *e;
+	
+	e = malloc(sizeof(Expression));
+	if(e == NULL){
+		perror("Expression\n");
+		return NULL;
+	}
+	
+	e->t = term();
+	if(e->t == NULL){
+		return NULL;
+	}
+
+	if(current->tok == PLUS){
+		e->op = OP_PLUS;
+		consume(PLUS);
+		//printf("+ ");
+		e->e = expression();
+		if(e->e == NULL) return NULL;
+	}else if(current->tok == MINUS){
+		e->op = OP_MINUS;	
+		consume(MINUS);
+		//printf("- ");
+		e->e = expression();
+		if(e->e == NULL) return NULL;
+	}else{
+		e->op = OP_NULL;
+		e->e = NULL;
+	}
+	
+	return e;
+}
+
+Term *term(){
+	Term *t;
+
+	t = malloc(sizeof(Term));
+	if(t == NULL){
+		perror("Term");
+		return NULL;
+	}
+	
+	t->f = factor();
+	if(current->tok == MULT){
+		t->op = OP_MULT;
+		consume(MULT);
+		t->t = term();
+		if(t->t == NULL) return NULL;
+		//printf("* ");
+	}else if(current->tok == DIV){
+		t->op = OP_DIV;
+		consume(DIV);
+		if(t->t == NULL) return NULL;
+		//printf("/ ");
+	}else{
+		t->op = OP_NULL;
+		t->t = NULL;
+	}
+
+	return t;
+}
+
+Factor *factor(){
+	Factor *f;
+	
+	f = malloc(sizeof(Factor));
+	if(f == NULL){
+		perror("Factor");
+		return NULL;
+	}
+
+	f->e = NULL;
+	f->op = OP_NULL;
+	f->f = NULL;
+
+	if(current->tok == LPAREN){
+		consume(LPAREN);
+
+		f->e = expression();
+		if(f->e == NULL){
+			return NULL;
+		}
+
+		if(!consume(RPAREN)){
+			fprintf(stderr, "Expected )\n");
+			return NULL;
+		}
+	}else if(current->tok == PLUS){
+		consume(PLUS);
+		f->type = D_UNARY;
+		f->op = OP_PLUS;
+		f->f = factor();
+		if(f->f == NULL){
+			return NULL;
+		}	
+	}else if(current->tok == MINUS){
+		consume(MINUS);
+		f->type = D_UNARY;
+		f->op = OP_MINUS;
+		f->f = factor();
+		if(f->f == NULL){
+			return NULL;
+		}
+	}else if(current->tok == INT){
+		f->type = D_INT;
+		strncpy(f->data, current->name, 64);
+		consume(INT);
+		//printf("%s ", f->data);
+	}else if(current->tok == ID){
+		f->type = D_VAR;
+		strncpy(f->data, current->name, 64);
+		consume(ID);
+		//printf("%s ", f->data);
+	}else{
+		fprintf(stderr, "Invalid Syntax\n");
+		return NULL;
+	}
+	return f;
 }
 
 int consume(enum TokType type){
-	if(current->tok != type) return 0;
+	if(current->tok != type){
+		fprintf(stderr, "Syntax Error\n");
+		return 0;
+	}
 	current = current->next;
 	return 1;
 }
+
+void deleteAST(AST *ast){
+	if(ast == NULL) return;
+	deleteProgram(ast->program);
+	free(ast);
+}
+
+void deleteProgram(Program *program){
+	if(program == NULL) return;
+	deleteCompoundStatement(program->cs);
+	free(program);
+}
+
+void deleteCompoundStatement(CompoundStatement *cs){
+	if(cs == NULL) return;
+	deleteStatementList(cs->statements);
+	free(cs);
+}
+
+void deleteStatementList(StatementList *sl){
+	Statement *c, *n;
+	if(sl == NULL) return;
+	for(c = sl->head; c != NULL; c = n){
+		n = c->next;
+		deleteStatement(c);
+	}
+	free(sl);
+}
+
+void deleteStatement(Statement *s){
+	if(s == NULL) return;
+	deleteCompoundStatement(s->cs);
+	deleteAssignmentStatement(s->as);
+	free(s);
+}
+
+void deleteAssignmentStatement(AssignmentStatement *as){
+	if(as == NULL) return;
+	deleteExpression(as->e);	
+	free(as);
+}
+
+void deleteExpression(Expression *e){
+	if(e == NULL) return;
+	deleteTerm(e->t);
+	deleteExpression(e->e);
+	free(e);	
+}
+
+void deleteTerm(Term *t){
+	if(t == NULL) return;
+	deleteFactor(t->f);
+	deleteTerm(t->t);
+	free(t);
+}
+
+void deleteFactor(Factor *f){
+	if(f == NULL) return;
+	deleteExpression(f->e);
+	deleteFactor(f->f);	
+	free(f);
+}
+
