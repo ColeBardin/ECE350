@@ -6,6 +6,10 @@ typedef struct KeyVal KeyVal;
 typedef struct TokList TokList;
 typedef struct TokNode TokNode;
 typedef struct VarNode VarNode;
+typedef struct CompoundStatement CompoundStatement;
+typedef struct StatementList StatementList;
+typedef struct Statement Statement;
+typedef struct AssignmentStatement AssignmentStatement;
 
 enum TokType {
 	PLUS,
@@ -21,6 +25,11 @@ enum TokType {
 	INT,
 	ID,
 	END,
+};
+
+enum StatementType {
+	CMP_STATE,
+	ASSGN_STATE,
 };
 
 struct KeyVal {
@@ -43,9 +52,30 @@ struct VarNode {
 	VarNode *next;
 };
 
+struct CompoundStatement {
+	StatementList *statements;
+};
+
+struct StatementList {
+	Statement *head;	
+};
+
+struct Statement {
+	enum StatementType type;
+	CompoundStatement cs;
+	AssignmentStatement as;
+	Statement *next;
+};
+
+struct AssignmentStatement {
+	int l;
+};
+
 TokList *newTokList();
 int addTok(TokList *l, enum TokType tok, char *name);
 int deleteTokList(TokList *l);
-int scan(FILE *fp, TokList *list);
 int getVarOrInt(FILE *fp, char *dest, int size);
+int scan(FILE *fp, TokList *list);
+int parse(TokList *list);
+int consume(enum TokType type);
 

@@ -4,6 +4,8 @@
 #include <string.h>
 #include "codegen.h"
 
+#define DB 1
+
 KeyVal allToks[] = {
 	{"+", PLUS},
 	{"-", MINUS},
@@ -16,6 +18,8 @@ KeyVal allToks[] = {
 	{"=", ASSIGN},
 	{";", SEMI},
 };
+
+TokNode *current;
 
 int main(int argc, char **argv){
 	int ret, i;
@@ -45,57 +49,29 @@ int main(int argc, char **argv){
 		exit(1);
 	}
 	
-	puts("scanning");
-	ret = scan(fp, TokL);	
-	TokNode *c;
-	puts("tokens");
-	for(c = TokL->head; c != NULL; c = c->next){
-		printf("%d: |%s|\n", c->tok, c->name);
-	}
 	// SCAN
+	if(scan(fp, TokL) == -1){
+		exit(2);
+	}
+	fclose(fp);
+	
+	if(DB){
+		TokNode *c;
+		puts("Tokens:");
+		for(c = TokL->head; c != NULL; c = c->next){
+			printf("%d: |%s|\n", c->tok, c->name);
+		}
+	}
+
 	// PARSE
+	if(parse(TokL) == -1){
+		exit(2);
+	}
 	// AST
 	// VM OUT
 	
 	deleteTokList(TokL);
 	exit(0);
-}
-
-int scan(FILE *fp, TokList *list){
-	char c;
-	char exp[64];
-	int nToks, i;
-
-	nToks = sizeof(allToks) / sizeof(KeyVal);
-
-	while((c = fgetc(fp)) != EOF){
-		if(c == ' ' || c == '\t' || c == '\n' || c == '\r'){
-			continue;
-		}else{
-			for(i = 0; i < nToks; i++){
-				if(c == allToks[i].key[0]){
-					addTok(list, allToks[i].val, allToks[i].key);
-					break;
-				}
-			}
-			if(i == nToks){
-				exp[0] = c;
-				if(getVarOrInt(fp, exp, 64) == -1){
-					fprintf(stderr, "Failed parsing input file\n");
-					exit(2);
-				}
-				if(exp[0] > '9' || exp[0] < '0'){
-					// Variable name
-					addTok(list, ID, exp);
-				}else{
-					// Integer
-					addTok(list, INT, exp);
-				}
-			}
-		}
-	}	
-	addTok(list, END, "EOF");
-	return 0;
 }
 
 int getVarOrInt(FILE *fp, char *dest, int size){
@@ -181,6 +157,60 @@ int deleteTokList(TokList *l){
 	return i;
 }
 
+int scan(FILE *fp, TokList *list){
+	char c;
+	char exp[64];
+	int nToks, i;
+
+	nToks = sizeof(allToks) / sizeof(KeyVal);
+
+	while((c = fgetc(fp)) != EOF){
+		if(c == ' ' || c == '\t' || c == '\n' || c == '\r'){
+			continue;
+		}else{
+			for(i = 0; i < nToks; i++){
+				if(c == allToks[i].key[0]){
+					addTok(list, allToks[i].val, allToks[i].key);
+					break;
+				}
+			}
+			if(i == nToks){
+				exp[0] = c;
+				if(getVarOrInt(fp, exp, 64) == -1){
+					fprintf(stderr, "Failed parsing input file\n");
+					return -1;
+				}
+				if(exp[0] > '9' || exp[0] < '0'){
+					// Variable name
+					addTok(list, ID, exp);
+				}else{
+					// Integer
+					addTok(list, INT, exp);
+				}
+			}
+		}
+	}	
+	addTok(list, END, "EOF");
+	return 0;
+}
+
+int parse(TokList *list){
+	if(list == NULL){
+		fprintf(stderr, "Parse received uninitialized token list\n");
+		return -1;
+	}
+	if(list->head == NULL){
+		fprintf(stderr, "Parse received empty token list\n");
+		return -1;
+	}
+
+	current = list->head;
 
 
+}
 
+int consume(enum TokType type){
+	if(current->tok != type) return 0;
+	current = current->next;
+	return 1;
+}
