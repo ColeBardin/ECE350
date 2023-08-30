@@ -146,4 +146,9 @@ void deleteAssignmentStatement(AssignmentStatement *as);
 void deleteExpression(Expression *e);
 void deleteTerm(Term *t);
 void deleteFactor(Factor *f);
-
+void visitCompoundStatement(CompoundStatement *cs);
+void visitStatement(Statement *s);
+void visitAssignmentStatement(AssignmentStatement *as);
+void visitExpression(Expression *e);
+void visitTerm(Term *t);
+void visitFactor(Factor *f);
