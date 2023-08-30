@@ -345,6 +345,7 @@ int deleteExprList(ExprList *l){
 		n = p->next;	
 		free(p);
 	}	
+	free(l);
 	return i;
 }
 
