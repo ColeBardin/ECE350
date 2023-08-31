@@ -4,6 +4,9 @@
 #include <string.h>
 #include "codegen.h"
 
+char line[128];
+VarList *VarL;
+TokNode *current;
 KeyVal allToks[] = {
 	{"+", PLUS},
 	{"-", MINUS},
@@ -16,10 +19,6 @@ KeyVal allToks[] = {
 	{"=", ASSIGN},
 	{";", SEMI},
 };
-
-VarList *VarL;
-TokNode *current;
-char line[128];
 
 int main(int argc, char **argv){
 	char *fnin, *fnout, *p;
