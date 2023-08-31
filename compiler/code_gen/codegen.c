@@ -550,3 +550,26 @@ void deleteFactor(Factor *f){
 	free(f);
 }
 
+void visitCompoundStatement(CompoundStatement *cs){
+
+}
+	
+void visitStatement(Statement *s){
+	
+	}
+	
+void visitAssignmentStatement(AssignmentStatement *as){
+	
+	}
+	
+void visitExpression(Expression *e){
+	
+	}
+	
+void visitTerm(Term *t){
+	
+	}
+	
+void visitFactor(Factor *f){
+
+}
