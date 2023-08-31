@@ -359,7 +359,7 @@ Program *program(){
 	}
 
 	if(!consume(END)){
-		fprintf(stderr, "No EOF found\n");
+		fprintf(stderr, "Expected EOF\n");
 		return NULL;
 	}
 
@@ -543,45 +543,52 @@ Factor *factor(){
 	f->op = OP_NULL;
 	f->f = NULL;
 
-	if(current->tok == LPAREN){
-		consume(LPAREN);
+	switch(current->tok){
+		case LPAREN:
+			consume(LPAREN);
 
-		f->e = expression();
-		if(f->e == NULL){
-			return NULL;
-		}
+			f->e = expression();
+			if(f->e == NULL){
+				return NULL;
+			}
 
-		if(!consume(RPAREN)){
-			fprintf(stderr, "Expected )\n");
+			if(!consume(RPAREN)){
+				fprintf(stderr, "Expected )\n");
+				return NULL;
+			}
+			break;
+		case PLUS:
+			consume(PLUS);
+			f->type = D_UNARY;
+			f->op = OP_PLUS;
+			f->f = factor();
+			if(f->f == NULL){
+				return NULL;
+			}	
+			break;
+		case MINUS:
+			consume(MINUS);
+			f->type = D_UNARY;
+			f->op = OP_MINUS;
+			f->f = factor();
+			if(f->f == NULL){
+				return NULL;
+			}
+			break;
+		case INT:
+			f->type = D_INT;
+			strncpy(f->data, current->name, 64);
+			consume(INT);
+			break;
+		case ID:
+			f->type = D_VAR;
+			strncpy(f->data, current->name, 64);
+			consume(ID);
+			break;
+		default:
+			fprintf(stderr, "Invalid Syntax\n");
 			return NULL;
-		}
-	}else if(current->tok == PLUS){
-		consume(PLUS);
-		f->type = D_UNARY;
-		f->op = OP_PLUS;
-		f->f = factor();
-		if(f->f == NULL){
-			return NULL;
-		}	
-	}else if(current->tok == MINUS){
-		consume(MINUS);
-		f->type = D_UNARY;
-		f->op = OP_MINUS;
-		f->f = factor();
-		if(f->f == NULL){
-			return NULL;
-		}
-	}else if(current->tok == INT){
-		f->type = D_INT;
-		strncpy(f->data, current->name, 64);
-		consume(INT);
-	}else if(current->tok == ID){
-		f->type = D_VAR;
-		strncpy(f->data, current->name, 64);
-		consume(ID);
-	}else{
-		fprintf(stderr, "Invalid Syntax\n");
-		return NULL;
+			break;
 	}
 	return f;
 }
@@ -672,9 +679,7 @@ int generateVM(char *fn, char *prog, AST *ast){
 
 	snprintf(line, 128, "function %s %d\n", prog, getVarCount(VarL));
 	fwrite(line, strlen(line), 1, fp);
-
 	visitCompoundStatement(ast->program->cs, fp);
-	
 	fputs("return\n", fp);
 	
 	fclose(fp);
@@ -723,14 +728,21 @@ void visitTerm(Term *t, FILE *fp){
 }
 	
 void visitFactor(Factor *f, FILE *fp){
-	if(f->type == D_EXPR){
-		visitExpression(f->e, fp);
-	}else if(f->type == D_UNARY){
-		// TODO: handle unary ops
-	}else if(f->type == D_INT){
-		doInt(fp, f->data);	
-	}else if(f->type == D_VAR){
-		doVar(fp, f->data);
+	switch(f->type){
+		case D_EXPR:
+			visitExpression(f->e, fp);
+			break;
+		case D_INT:
+			doInt(fp, f->data);	
+			break;
+		case D_VAR:
+			doVar(fp, f->data);
+			break;
+		case D_UNARY:
+			// TODO: handle unary ops
+			break;
+		default:
+			break;
 	}
 }
 
@@ -771,19 +783,19 @@ void popVar(FILE *fp, char *var){
 }
 
 void doAdd(FILE *fp){
-	fwrite("add\n", 4, 1, fp);
+	fputs("add\n", fp);
 }
 
 void doSub(FILE *fp){
-	fwrite("sub\n", 4, 1, fp);
+	fputs("sub\n", fp);
 }
 
 void doMult(FILE *fp){
-	fwrite("mult\n", 5, 1, fp);
+	fputs("mult\n", fp);
 }
 
 void doDiv(FILE *fp){
-	fwrite("div\n", 4, 1, fp);
+	fputs("div\n", fp);
 }
 
 void doInt(FILE *fp, char *num){
