@@ -17,6 +17,7 @@ KeyVal allToks[] = {
 	{";", SEMI},
 };
 
+VarList *VarL;
 TokNode *current;
 char line[128];
 
@@ -52,32 +53,46 @@ int main(int argc, char **argv){
 		fprintf(stderr, "Failed to create token list\n");
 		exit(1);
 	}
+
+	VarL = newVarList();
+	if(VarL == NULL){
+		fprintf(stderr, "Failed to create variable list\n");
+		deleteTokList(TokL);
+		exit(1);
+	}
 	
 	// SCAN
 	if(scan(fp, TokL) == -1){
+		deleteTokList(TokL);
+		deleteVarList(VarL);
 		exit(2);
 	}
 	fclose(fp);
 	
-	// TODO: add variable counting and resolving
 	// PARSE
 	ast = parse(TokL);
 	if(ast == NULL){
+		deleteTokList(TokL);
+		deleteVarList(VarL);
 		exit(2);
 	}
+
 	deleteTokList(TokL);
 
 	// VM OUT
 	if(setupVM(outFunc) == -1){
 		deleteAST(ast);
+		deleteVarList(VarL);
 		exit(1);
 	}
 
 	if(generateVM(fnout, outFunc, ast) == -1){
 		deleteAST(ast);
+		deleteVarList(VarL);
 		exit(1);
 	}
 
+	deleteVarList(VarL);
 	deleteAST(ast);
 	exit(0);
 }
@@ -166,6 +181,98 @@ int deleteTokList(TokList *l){
 	return i;
 }
 
+VarList *newVarList(){
+	VarList *new;
+	
+	new = malloc(sizeof(VarList));
+	if(new == NULL){
+		perror("Failed to allocate memory for variable list");
+		return NULL;
+	}
+	new->head = NULL;
+	return new;
+
+}
+
+int addVar(VarList *l, char *name){
+	static int cnt = 0;
+	VarNode *p;
+	VarNode *new;
+
+	if(l == NULL){
+		fprintf(stderr, "Error: Uninitialized list\n");	
+		return -1;
+	}
+
+	if(isVar(l, name) >= 0) return 0;
+
+	new = malloc(sizeof(VarNode));
+	if(new == NULL){
+		perror("Failed to allocate memory for new variable");
+		return -2;
+	}
+
+	new->offset = cnt++;
+	strncpy(new->name, name, 64);
+	new->next = NULL;
+
+	if(l->head == NULL){
+		l->head = new;
+	}else{
+		for(p = l->head; p->next != NULL; p = p->next);
+		p->next = new;
+	}
+
+	return cnt;
+}
+
+int isVar(VarList *l, char *name){
+	VarNode *p;
+
+	if(l == NULL){
+		fprintf(stderr, "isVar error, uninitialized var list\n");
+		return -1;
+	}else if(l->head == NULL){
+		return -2;
+	}else{
+		for(p = l->head; p != NULL; p = p->next){
+			if(!strncmp(p->name, name, 64)) return p->offset;
+		}
+		return -3;
+	}
+}
+
+int getVarCount(VarList *l){
+	VarNode *p;
+	int count;
+
+	if(l == NULL) return 0;
+	for(p = l->head, count = 0; p != NULL; p = p->next, count++);
+	return count;
+}
+
+int getVarOffset(VarList *l, char *name){
+	VarNode *p;
+	
+	if(l == NULL) return -1;
+	if(l->head == NULL) return -2;
+
+	return 0;
+}
+
+int deleteVarList(VarList *l){
+	VarNode*p, *n;
+	int i;
+
+	if(l == NULL) return -1;
+	for(p = l->head, i = 0; p != NULL; p = n, i++){
+		n = p->next;	
+		free(p);
+	}	
+	free(l);
+	return i;
+}
+
 int scan(FILE *fp, TokList *list){
 	char c;
 	char exp[64];
@@ -191,6 +298,7 @@ int scan(FILE *fp, TokList *list){
 				}
 				if(exp[0] > '9' || exp[0] < '0'){
 					addTok(list, ID, exp);
+					addVar(VarL, exp);
 				}else{
 					addTok(list, INT, exp);
 				}
@@ -550,13 +658,16 @@ void deleteFactor(Factor *f){
 int generateVM(char *fn, char *prog, AST *ast){
 	FILE *fp;
 
+	printf("Generating output file: %s\n", fn);
+	printf("Resolved %d local variables\n", getVarCount(VarL));
+
 	fp = fopen(fn, "w");
 	if(fp == NULL){
 		perror("Out file");
 		return -1;
 	}
 
-	snprintf(line, 128, "function %s %d\n", prog, 0);
+	snprintf(line, 128, "function %s %d\n", prog, getVarCount(VarL));
 	fwrite(line, strlen(line), 1, fp);
 
 	visitCompoundStatement(ast->program->cs, fp);
@@ -650,8 +761,7 @@ int setupVM(char *prog){
 }
 
 void popVar(FILE *fp, char *var){
-	// TODO: get var number
-	snprintf(line, 128, "pop local %s\n", var);
+	snprintf(line, 128, "pop local %d\n", isVar(VarL, var));
 	fwrite(line, strlen(line), 1, fp);
 }
 
@@ -677,8 +787,7 @@ void doInt(FILE *fp, char *num){
 }
 
 void doVar(FILE *fp, char *var){
-	// TODO: get var number
-	snprintf(line, 128, "push local %s\n", var);
+	snprintf(line, 128, "push local %d\n", isVar(VarL, var));
 	fwrite(line, strlen(line), 1, fp);
 }
 

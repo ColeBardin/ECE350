@@ -5,6 +5,7 @@
 typedef struct KeyVal KeyVal;
 typedef struct TokList TokList;
 typedef struct TokNode TokNode;
+typedef struct VarList VarList;
 typedef struct VarNode VarNode;
 typedef struct AST AST;
 typedef struct Program Program;
@@ -68,8 +69,13 @@ struct TokNode {
 	TokNode *next;
 };
 
+struct VarList {
+	VarNode *head;
+};
+
 struct VarNode {
 	char name[64];
+	int offset;
 	VarNode *next;
 };
 
@@ -125,6 +131,11 @@ struct Statement {
 TokList *newTokList();
 int addTok(TokList *l, enum TokType tok, char *name);
 int deleteTokList(TokList *l);
+VarList *newVarList();
+int addVar(VarList *l, char *name);
+int isVar(VarList *l, char *name);
+int getVarCount(VarList *l);
+int deleteVarList(VarList *l);
 int getVarOrInt(FILE *fp, char *dest, int size);
 int scan(FILE *fp, TokList *list);
 AST *parse(TokList *list);
