@@ -4,7 +4,7 @@
 #include <string.h>
 #include "codegen.h"
 
-#define DB 1
+#define DB 0
 
 KeyVal allToks[] = {
 	{"+", PLUS},
@@ -20,6 +20,7 @@ KeyVal allToks[] = {
 };
 
 TokNode *current;
+char line[128];
 
 int main(int argc, char **argv){
 	int ret, i, nLocals;
@@ -64,7 +65,7 @@ int main(int argc, char **argv){
 		TokNode *c;
 		puts("Tokens:");
 		for(c = TokL->head; c != NULL; c = c->next){
-			printf("%d: |%s|\n", c->tok, c->name);
+			printf("(%d,%s)\n", c->tok, c->name);
 		}
 	}
 
@@ -73,19 +74,19 @@ int main(int argc, char **argv){
 	if(ast == NULL){
 		exit(2);
 	}
-
-	// AST
-	
 	deleteTokList(TokL);
+
 	// VM OUT
-	fp = fopen(fnout, "w");
-	if(fp == NULL){
-		perror("Out file");
+	if(setupVM(outFunc) == -1){
 		deleteAST(ast);
 		exit(1);
 	}
-	
-	fclose(fp);
+
+	if(generateVM(fnout, outFunc, ast) == -1){
+		deleteAST(ast);
+		exit(1);
+	}
+
 	deleteAST(ast);
 	exit(0);
 }
@@ -323,6 +324,8 @@ Statement *statement(){
 	}
 
 	s->next = NULL;
+	s->cs = NULL;
+	s->as = NULL;
 
 	if(current->tok == LCURLY){
 		s->type = CMP_STATE;
@@ -502,6 +505,7 @@ int consume(enum TokType type){
 
 void deleteAST(AST *ast){
 	if(ast == NULL) return;
+	puts("Deleting AST");
 	deleteProgram(ast->program);
 	free(ast);
 }
@@ -562,26 +566,137 @@ void deleteFactor(Factor *f){
 	free(f);
 }
 
-void visitCompoundStatement(CompoundStatement *cs){
+int generateVM(char *fn, char *prog, AST *ast){
+	FILE *fp;
 
+	fp = fopen(fn, "w");
+	if(fp == NULL){
+		perror("Out file");
+		return -1;
+	}
+
+	snprintf(line, 128, "function %s %d\n", prog, 0);
+	fwrite(line, strlen(line), 1, fp);
+
+	visitCompoundStatement(ast->program->cs, fp);
+	
+	fputs("return\n", fp);
+	
+	fclose(fp);
+
+	return 0;
+}
+
+void visitCompoundStatement(CompoundStatement *cs, FILE *fp){
+	Statement *s;
+
+	for(s = cs->statements->head; s != NULL; s = s->next){
+		visitStatement(s, fp);
+	}
 }
 	
-void visitStatement(Statement *s){
+void visitStatement(Statement *s, FILE *fp){
+	if(s->type == CMP_STATE) visitCompoundStatement(s->cs, fp);
+	else visitAssignmentStatement(s->as, fp);
+}
 	
+void visitAssignmentStatement(AssignmentStatement *as, FILE *fp){
+	visitExpression(as->e, fp);
+	popVar(fp, as->left);
+}
+	
+void visitExpression(Expression *e, FILE *fp){
+	visitTerm(e->t, fp);
+	if(e->op == OP_PLUS){
+		visitExpression(e->e, fp);
+		doAdd(fp);
+	}else if(e->op == OP_MINUS){
+		visitExpression(e->e, fp);
+		doSub(fp);
 	}
+}
 	
-void visitAssignmentStatement(AssignmentStatement *as){
-	
+void visitTerm(Term *t, FILE *fp){
+	visitFactor(t->f, fp);
+	if(t->op == OP_MULT){
+		visitTerm(t->t, fp);
+		doMult(fp);
+	}else if(t->op == OP_DIV){
+		visitTerm(t->t, fp);
+		doDiv(fp);
 	}
+}
 	
-void visitExpression(Expression *e){
-	
+void visitFactor(Factor *f, FILE *fp){
+	if(f->type == D_EXPR){
+		visitExpression(f->e, fp);
+	}else if(f->type == D_UNARY){
+		// TODO: handle unary ops
+	}else if(f->type == D_INT){
+		doInt(fp, f->data);	
+	}else if(f->type == D_VAR){
+		doVar(fp, f->data);
 	}
-	
-void visitTerm(Term *t){
-	
-	}
-	
-void visitFactor(Factor *f){
+}
 
+int setupVM(char *prog){
+	FILE *fp;
+	char line[128];
+
+	puts("Setting up VM");
+
+	// sys.vm
+	fp = fopen("sys.vm", "w");
+	if(fp == NULL){
+		perror("sys.vm");
+		return -1;
+	}
+	snprintf(line, 128, "function init 0\nset sp 256\ncall main 0\nend\n");
+	fwrite(line, strlen(line), 1, fp);
+	fclose(fp);
+
+	// main.vm
+	fp = fopen("main.vm", "w");
+	if(fp == NULL){
+		perror("main.vm");
+		return -1;
+	}
+	snprintf(line, 128, "function main 0\ncall %s 0\nreturn\n", prog);
+	fwrite(line, strlen(line), 1, fp);
+	fclose(fp);
+
+	return 0;
+}
+
+void popVar(FILE *fp, char *var){
+	// TODO: get var number
+	snprintf(line, 128, "pop local %s\n", var);
+	fwrite(line, strlen(line), 1, fp);
+}
+
+void doAdd(FILE *fp){
+	fwrite("add\n", 4, 1, fp);
+}
+
+void doSub(FILE *fp){
+	fwrite("sub\n", 4, 1, fp);
+}
+
+void doMult(FILE *fp){
+	fwrite("mult\n", 5, 1, fp);
+}
+
+void doDiv(FILE *fp){
+	fwrite("div\n", 4, 1, fp);
+}
+
+void doInt(FILE *fp, char *num){
+	snprintf(line, 128, "push constant %d\n", atoi(num));
+	fwrite(line, strlen(line), 1, fp);
+}
+
+void doVar(FILE *fp, char *var){
+	// TODO: get var number
+	snprintf(line, 128, "push local %s\n", var);
+	fwrite(line, strlen(line), 1, fp);
 }
