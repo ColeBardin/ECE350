@@ -4,8 +4,6 @@
 #include <string.h>
 #include "codegen.h"
 
-#define DB 0
-
 KeyVal allToks[] = {
 	{"+", PLUS},
 	{"-", MINUS},
@@ -61,14 +59,7 @@ int main(int argc, char **argv){
 	}
 	fclose(fp);
 	
-	if(DB){
-		TokNode *c;
-		puts("Tokens:");
-		for(c = TokL->head; c != NULL; c = c->next){
-			printf("(%d,%s)\n", c->tok, c->name);
-		}
-	}
-
+	// TODO: add variable counting and resolving
 	// PARSE
 	ast = parse(TokL);
 	if(ast == NULL){
@@ -199,10 +190,8 @@ int scan(FILE *fp, TokList *list){
 					return -1;
 				}
 				if(exp[0] > '9' || exp[0] < '0'){
-					// Variable name
 					addTok(list, ID, exp);
 				}else{
-					// Integer
 					addTok(list, INT, exp);
 				}
 			}
@@ -349,7 +338,6 @@ AssignmentStatement *assignmentStatement(){
 		return NULL;
 	}
 	strncpy(a->left, current->name, 64);
-	//printf("found: %s = ", a->left);
 	if(!consume(ID)){
 		fprintf(stderr, "Expected variable\n");
 		return NULL;
@@ -369,7 +357,6 @@ AssignmentStatement *assignmentStatement(){
 		fprintf(stderr, "Expected semicolon\n");
 		return NULL;
 	}
-	//puts("");
 	return a;
 }
 
@@ -390,13 +377,11 @@ Expression *expression(){
 	if(current->tok == PLUS){
 		e->op = OP_PLUS;
 		consume(PLUS);
-		//printf("+ ");
 		e->e = expression();
 		if(e->e == NULL) return NULL;
 	}else if(current->tok == MINUS){
 		e->op = OP_MINUS;	
 		consume(MINUS);
-		//printf("- ");
 		e->e = expression();
 		if(e->e == NULL) return NULL;
 	}else{
@@ -422,12 +407,10 @@ Term *term(){
 		consume(MULT);
 		t->t = term();
 		if(t->t == NULL) return NULL;
-		//printf("* ");
 	}else if(current->tok == DIV){
 		t->op = OP_DIV;
 		consume(DIV);
 		if(t->t == NULL) return NULL;
-		//printf("/ ");
 	}else{
 		t->op = OP_NULL;
 		t->t = NULL;
@@ -481,12 +464,10 @@ Factor *factor(){
 		f->type = D_INT;
 		strncpy(f->data, current->name, 64);
 		consume(INT);
-		//printf("%s ", f->data);
 	}else if(current->tok == ID){
 		f->type = D_VAR;
 		strncpy(f->data, current->name, 64);
 		consume(ID);
-		//printf("%s ", f->data);
 	}else{
 		fprintf(stderr, "Invalid Syntax\n");
 		return NULL;
@@ -700,3 +681,4 @@ void doVar(FILE *fp, char *var){
 	snprintf(line, 128, "push local %s\n", var);
 	fwrite(line, strlen(line), 1, fp);
 }
+
