@@ -27,7 +27,7 @@ int main(int argc, char **argv){
 	char outFunc[64];
 	FILE *fp;
 	TokList *TokL;
-	AST *ast;
+	AST* ast;
 
 	if(argc < 3){
 		fprintf(stderr, "Usage: ./codegen filename.txt filename.vm\n");	
@@ -75,10 +75,18 @@ int main(int argc, char **argv){
 	}
 
 	// AST
-	// VM OUT
 	
-	deleteAST(ast);
 	deleteTokList(TokL);
+	// VM OUT
+	fp = fopen(fnout, "w");
+	if(fp == NULL){
+		perror("Out file");
+		deleteAST(ast);
+		exit(1);
+	}
+	
+	fclose(fp);
+	deleteAST(ast);
 	exit(0);
 }
 
