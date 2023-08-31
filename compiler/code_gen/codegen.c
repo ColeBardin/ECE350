@@ -22,8 +22,9 @@ KeyVal allToks[] = {
 TokNode *current;
 
 int main(int argc, char **argv){
-	int ret, i;
-	char *fnin, *fnout;
+	int ret, i, nLocals;
+	char *fnin, *fnout, *p;
+	char outFunc[64];
 	FILE *fp;
 	TokList *TokL;
 	AST *ast;
@@ -37,6 +38,9 @@ int main(int argc, char **argv){
 	
 	fnin = argv[1];
 	fnout = argv[2];
+	strncpy(outFunc, fnin, 64);
+	p = strrchr(outFunc, '.');
+	if(p != NULL) *p = '\0';
 	
 	fp = fopen(fnin, "r");
 	if(fp == NULL){
