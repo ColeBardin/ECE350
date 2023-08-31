@@ -22,7 +22,6 @@ TokNode *current;
 char line[128];
 
 int main(int argc, char **argv){
-	int ret, i, nLocals;
 	char *fnin, *fnout, *p;
 	char outFunc[64];
 	FILE *fp;
@@ -42,6 +41,7 @@ int main(int argc, char **argv){
 	p = strrchr(outFunc, '.');
 	if(p != NULL) *p = '\0';
 	
+	printf("Opening file: %s\n", fnin);
 	fp = fopen(fnin, "r");
 	if(fp == NULL){
 		perror("Failed to open input file");
@@ -51,18 +51,21 @@ int main(int argc, char **argv){
 	TokL = newTokList();
 	if(TokL == NULL){
 		fprintf(stderr, "Failed to create token list\n");
+		fclose(fp);
 		exit(1);
 	}
 
 	VarL = newVarList();
 	if(VarL == NULL){
 		fprintf(stderr, "Failed to create variable list\n");
+		fclose(fp);
 		deleteTokList(TokL);
 		exit(1);
 	}
 	
 	// SCAN
 	if(scan(fp, TokL) == -1){
+		fclose(fp);
 		deleteTokList(TokL);
 		deleteVarList(VarL);
 		exit(2);
@@ -76,7 +79,6 @@ int main(int argc, char **argv){
 		deleteVarList(VarL);
 		exit(2);
 	}
-
 	deleteTokList(TokL);
 
 	// VM OUT
@@ -85,7 +87,6 @@ int main(int argc, char **argv){
 		deleteVarList(VarL);
 		exit(1);
 	}
-
 	if(generateVM(fnout, outFunc, ast) == -1){
 		deleteAST(ast);
 		deleteVarList(VarL);
@@ -172,6 +173,7 @@ int deleteTokList(TokList *l){
 	TokNode *p, *n;
 	int i;
 
+	puts("Deleting Token List");
 	if(l == NULL) return -1;
 	for(p = l->head, i = 0; p != NULL; p = n, i++){
 		n = p->next;	
@@ -264,6 +266,7 @@ int deleteVarList(VarList *l){
 	VarNode*p, *n;
 	int i;
 
+	puts("Deleting Variable List");
 	if(l == NULL) return -1;
 	for(p = l->head, i = 0; p != NULL; p = n, i++){
 		n = p->next;	
@@ -278,6 +281,7 @@ int scan(FILE *fp, TokList *list){
 	char exp[64];
 	int nToks, i;
 
+	puts("Scanning for tokens");
 	nToks = sizeof(allToks) / sizeof(KeyVal);
 
 	while((c = fgetc(fp)) != EOF){
@@ -342,7 +346,6 @@ AST *parse(TokList *list){
 Program *program(){
 	Program *p;
 
-	puts("Creating program");
 	p = malloc(sizeof(Program));
 	if(p == NULL){
 		perror("Program");
@@ -658,7 +661,7 @@ void deleteFactor(Factor *f){
 int generateVM(char *fn, char *prog, AST *ast){
 	FILE *fp;
 
-	printf("Generating output file: %s\n", fn);
+	printf("Creating file: %s\n", fn);
 	printf("Resolved %d local variables\n", getVarCount(VarL));
 
 	fp = fopen(fn, "w");
@@ -738,6 +741,7 @@ int setupVM(char *prog){
 	puts("Setting up VM");
 
 	// sys.vm
+	puts("Creating file: sys.vm");
 	fp = fopen("sys.vm", "w");
 	if(fp == NULL){
 		perror("sys.vm");
@@ -748,6 +752,7 @@ int setupVM(char *prog){
 	fclose(fp);
 
 	// main.vm
+	puts("Creating file: main.vm");
 	fp = fopen("main.vm", "w");
 	if(fp == NULL){
 		perror("main.vm");
