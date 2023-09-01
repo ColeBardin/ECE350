@@ -732,13 +732,16 @@ void visitFactor(Factor *f, FILE *fp){
 			visitExpression(f->e, fp);
 			break;
 		case D_INT:
-			doInt(fp, f->data);	
+			doInt(fp, atoi(f->data));	
 			break;
 		case D_VAR:
 			doVar(fp, f->data);
 			break;
 		case D_UNARY:
-			// TODO: handle unary ops
+			doInt(fp, 0);
+			visitFactor(f->f, fp);
+			if(f->op == OP_PLUS) doAdd(fp);
+			else if(f->op == OP_MINUS) doSub(fp);
 			break;
 		default:
 			break;
@@ -797,8 +800,8 @@ void doDiv(FILE *fp){
 	fputs("div\n", fp);
 }
 
-void doInt(FILE *fp, char *num){
-	snprintf(line, 128, "push constant %d\n", atoi(num));
+void doInt(FILE *fp, int num){
+	snprintf(line, 128, "push constant %d\n", num);
 	fwrite(line, strlen(line), 1, fp);
 }
 
