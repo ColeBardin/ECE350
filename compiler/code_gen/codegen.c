@@ -755,7 +755,6 @@ int setupVM(char *prog){
 
 	puts("Setting up VM");
 
-	// sys.vm
 	puts("Creating file: sys.vm");
 	fp = fopen("sys.vm", "w");
 	if(fp == NULL){
@@ -766,7 +765,6 @@ int setupVM(char *prog){
 	fwrite(line, strlen(line), 1, fp);
 	fclose(fp);
 
-	// main.vm
 	puts("Creating file: main.vm");
 	fp = fopen("main.vm", "w");
 	if(fp == NULL){
