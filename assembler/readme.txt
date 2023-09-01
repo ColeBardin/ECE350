@@ -1,4 +1,4 @@
-I asked Dr. Kandesamy if I could write my assembler in C instead of Python. He said it was okay.
+I asked Dr. Kandasamy if I could write my assembler in C instead of Python. He said it was okay.
 
 I included a Makefile that can compile the executable. 
 
