@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 typedef struct KeyVal KeyVal;
 typedef struct TokList TokList;
 typedef struct TokNode TokNode;
@@ -79,16 +77,16 @@ struct VarNode {
 	VarNode *next;
 };
 
-struct CompoundStatement {
-	StatementList *statements;
+struct AST {
+	Program *p;
 };
 
 struct Program {
 	CompoundStatement *cs;
 };
 
-struct AST {
-	Program *program;
+struct CompoundStatement {
+	StatementList *sl;
 };
 
 struct StatementList {
@@ -96,18 +94,16 @@ struct StatementList {
 	Statement *tail;
 };
 
-struct Factor {
-	enum DataType type;
-	enum OpType op;
-	Expression *e;
-	Factor *f;
-	char data[64];
+struct Statement {
+	enum StatementType type;
+	CompoundStatement *cs;
+	AssignmentStatement *as;
+	Statement *next;
 };
 
-struct Term {
-	Factor *f;
-	enum OpType op;
-	Term *t;
+struct AssignmentStatement {
+	char lval[64];
+	Expression *e;
 };
 
 struct Expression {
@@ -116,16 +112,18 @@ struct Expression {
 	Expression *e;
 };
 
-struct AssignmentStatement {
-	char left[64];
-	Expression *e;
+struct Term {
+	Factor *f;
+	enum OpType op;
+	Term *t;
 };
 
-struct Statement {
-	enum StatementType type;
-	CompoundStatement *cs;
-	AssignmentStatement *as;
-	Statement *next;
+struct Factor {
+	enum DataType type;
+	enum OpType op;
+	Expression *e;
+	Factor *f;
+	char data[64];
 };
 
 TokList *newTokList();
@@ -157,13 +155,13 @@ void deleteAssignmentStatement(AssignmentStatement *as);
 void deleteExpression(Expression *e);
 void deleteTerm(Term *t);
 void deleteFactor(Factor *f);
-int generateVM(char *fn, char *prog, AST *ast);
 void visitCompoundStatement(CompoundStatement *cs, FILE *fp);
 void visitStatement(Statement *s, FILE *fp);
 void visitAssignmentStatement(AssignmentStatement *as, FILE *fp);
 void visitExpression(Expression *e, FILE *fp);
 void visitTerm(Term *t, FILE *fp);
 void visitFactor(Factor *f, FILE *fp);
+int generateVM(char *fn, char *prog, AST *ast);
 int setupVM(char *prog);
 void popVar(FILE *fp, char *var);
 void doAdd(FILE *fp);

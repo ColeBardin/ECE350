@@ -333,8 +333,8 @@ AST *parse(TokList *list){
 		return NULL;
 	}
 
-	new->program = program();
-	if(new->program == NULL){
+	new->p = program();
+	if(new->p == NULL){
 		fprintf(stderr, "Failed to create program\n");
 		return NULL;
 	}
@@ -379,7 +379,7 @@ CompoundStatement *compoundStatement(){
 		return NULL;
 	}
 	
-	cs->statements = getStatements();
+	cs->sl = getStatements();
 
 	if(!consume(RCURLY)){
 		fprintf(stderr, "Missing }\n");
@@ -447,7 +447,7 @@ AssignmentStatement *assignmentStatement(){
 		perror("Assignment Statement\n");
 		return NULL;
 	}
-	strncpy(a->left, current->name, 64);
+	strncpy(a->lval, current->name, 64);
 	if(!consume(ID)){
 		fprintf(stderr, "Expected variable\n");
 		return NULL;
@@ -604,7 +604,7 @@ int consume(enum TokType type){
 void deleteAST(AST *ast){
 	if(ast == NULL) return;
 	puts("Deleting AST");
-	deleteProgram(ast->program);
+	deleteProgram(ast->p);
 	free(ast);
 }
 
@@ -616,7 +616,7 @@ void deleteProgram(Program *program){
 
 void deleteCompoundStatement(CompoundStatement *cs){
 	if(cs == NULL) return;
-	deleteStatementList(cs->statements);
+	deleteStatementList(cs->sl);
 	free(cs);
 }
 
@@ -678,7 +678,7 @@ int generateVM(char *fn, char *prog, AST *ast){
 
 	snprintf(line, 128, "function %s %d\n", prog, getVarCount(VarL));
 	fwrite(line, strlen(line), 1, fp);
-	visitCompoundStatement(ast->program->cs, fp);
+	visitCompoundStatement(ast->p->cs, fp);
 	fputs("return\n", fp);
 	
 	fclose(fp);
@@ -689,7 +689,7 @@ int generateVM(char *fn, char *prog, AST *ast){
 void visitCompoundStatement(CompoundStatement *cs, FILE *fp){
 	Statement *s;
 
-	for(s = cs->statements->head; s != NULL; s = s->next){
+	for(s = cs->sl->head; s != NULL; s = s->next){
 		visitStatement(s, fp);
 	}
 }
@@ -701,7 +701,7 @@ void visitStatement(Statement *s, FILE *fp){
 	
 void visitAssignmentStatement(AssignmentStatement *as, FILE *fp){
 	visitExpression(as->e, fp);
-	popVar(fp, as->left);
+	popVar(fp, as->lval);
 }
 	
 void visitExpression(Expression *e, FILE *fp){
