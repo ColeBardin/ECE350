@@ -742,6 +742,7 @@ void visitFactor(Factor *f, FILE *fp){
 			visitFactor(f->f, fp);
 			if(f->op == OP_PLUS) doAdd(fp);
 			else if(f->op == OP_MINUS) doSub(fp);
+			else fprintf(stderr, "Error visiting unary operator\n");
 			break;
 		default:
 			break;
