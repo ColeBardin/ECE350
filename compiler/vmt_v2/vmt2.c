@@ -14,6 +14,8 @@ void set(FILE *fp, Expr *n);
 void end(FILE *fp, Expr *n);
 void add(FILE *fp, Expr *n);
 void sub(FILE *fp, Expr *n);
+void mult(FILE *fp, Expr *n);
+void divi(FILE *fp, Expr *n);
 void neg(FILE *fp, Expr *n);
 void eq(FILE *fp, Expr *n);
 void gt(FILE *fp, Expr *n);
@@ -37,6 +39,8 @@ KeyVal ops[] = {
 	{"end", CMD_END},	
 	{"add", CMD_ADD},	
 	{"sub", CMD_SUB},	
+	{"mult", CMD_MULT},	
+	{"div", CMD_DIV},	
 	{"neg", CMD_NEG},	
 	{"eq", CMD_EQ},	
 	{"gt", CMD_GT},	
@@ -71,6 +75,8 @@ void (* cmds[])(FILE *fp, Expr *n) = {
 	&end,
 	&add,
 	&sub,
+	&mult,
+	&divi,
 	&neg,
 	&eq,
 	&gt,
@@ -450,6 +456,38 @@ void sub(FILE *fp, Expr *n){
 
 	sprintf(line, "D=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
+}
+
+void mult(FILE *fp, Expr *n){
+	static int multN = 0;
+	// x * y
+	// stack
+	// x
+	// y
+	// SP
+
+	// TODO: fix
+	// SP val = 0, D<-y, go to MULT_LOOP_N if if y >= 0, SP->y
+	sprintf(line, "@SP\nA=M\nM=0\n@SP\nM=M-1\nA=M\nD=M\n@MULT_LOOP_%d\nD;JGE\n", multN);
+	fwrite(line, strlen(line), 1, fp);
+	// y = -y, x = -x, SP->y
+	sprintf(line, "@SP\nA=M\nM=-M\n@SP\nA=M-1\nM=-M\n(MULT_LOOP_%d)\n", multN);
+	fwrite(line, strlen(line), 1, fp);
+	// exit if y <= 0, y--, D<-x, SP->y
+	sprintf(line, "@SP\nA=M\nD=M\n@END_MULT_LOOP_%d\nD;JLE\n@SP\nA=M\nM=M-1\n@SP\nA=M-1\nD=M\n", multN);
+	fwrite(line, strlen(line), 1, fp);
+	// ret = ret + x, jump to top of loop
+	sprintf(line, "@SP\nA=M+1\nM=M+A\n@MULT_LOOP_%d\n0;JMP\n", multN);
+	fwrite(line, strlen(line), 1, fp);
+	// ret -> x on SP
+	sprintf(line, "(END_MULT_LOOP_%d)\n@SP\nA=M+1\nD=M\n@SP\nA=M-1\nM=D\n", multN++);
+	fwrite(line, strlen(line), 1, fp);
+}
+
+void divi(FILE *fp, Expr *n){
+	static int divN = 0;
+
+	pop2(fp);
 }
 
 void neg(FILE *fp, Expr *n){

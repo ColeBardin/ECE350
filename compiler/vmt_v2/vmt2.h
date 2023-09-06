@@ -7,13 +7,15 @@ typedef struct ExprList ExprList;
 typedef struct KeyVal KeyVal;
 
 enum CmdType {
-	CMD_PUSH,
+	CMD_PUSH = 0,
 	CMD_POP,
 	CMD_SET,
 	CMD_END,
 	CMD_ADD,
 	CMD_SUB,
 	CMD_NEG,
+	CMD_MULT,
+	CMD_DIV,
 	CMD_EQ,
 	CMD_GT,
 	CMD_LT,
