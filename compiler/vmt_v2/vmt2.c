@@ -461,55 +461,28 @@ void sub(FILE *fp, Expr *n){
 
 void mult(FILE *fp, Expr *n){
 	static int multN = 0;
-	// x * y
-	// stack
-	// x
-	// y
-	// SP
 
-	// 1)
-	// If y >=0, go to END_IF_MULT_N
 	sprintf(line, "//MULT\n@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-	// y = -y, x = -x
 	sprintf(line, "@SP\nA=M-1\nM=-M\n@2\nD=A\n@SP\nA=M-D\nM=-M\n");
 	fwrite(line, strlen(line), 1, fp);
-
-	// 2)
-	// label, ret = 0
 	sprintf(line, "(END_IF_MULT_%d)\n@SP\nA=M\nM=0\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-	
-	// 3)
-	// label
 	sprintf(line, "(START_LOOP_MULT_%d)\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-	// put y into D reg, exit loop if y <= 0
 	sprintf(line, "@SP\nA=M-1\nD=M\n@END_LOOP_MULT_%d\nD;JLE\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-	// put x into D reg
-	sprintf(line, "@2\nD=A\n@SP\nA=M-D\nD=M\n");
+	sprintf(line, "@2\nD=A\n@SP\nA=M-D\nD=M\n@SP\nA=M\nM=M+D\n");
 	fwrite(line, strlen(line), 1, fp);
-	// ret += x
-	sprintf(line, "@SP\nA=M\nM=M+D\n");
-	fwrite(line, strlen(line), 1, fp);
-	// y--, go to top of loop
 	sprintf(line, "@SP\nA=M-1\nM=M-1\n@START_LOOP_MULT_%d\n0;JMP\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-
-	// 4)
-	// label
-	sprintf(line, "(END_LOOP_MULT_%d)\n", multN++);
-	fwrite(line, strlen(line), 1, fp);
-	// x = ret, y<-SP
-	sprintf(line, "@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n");
+	sprintf(line, "(END_LOOP_MULT_%d)\n@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n", multN++);
 	fwrite(line, strlen(line), 1, fp);
 }
 
 void divi(FILE *fp, Expr *n){
 	static int divN = 0;
 
-	pop2(fp);
 }
 
 void neg(FILE *fp, Expr *n){
