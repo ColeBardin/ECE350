@@ -33,6 +33,8 @@ void label(FILE *fp, VmExpr *n);
 void pushString(FILE *fp, char *s);
 void pop2(FILE *fp);
 
+char BLine[128];
+
 KeyVal vmOps[] = {
 	{"push", CMD_PUSH},
 	{"pop", CMD_POP},	
@@ -92,8 +94,6 @@ void (* vmCmds[])(FILE *fp, VmExpr *n) = {
 	&go2,
 	&label
 };
-
-char line[128];
 
 int main(int argc, char **argv){
 	FILE *fp;
@@ -383,107 +383,107 @@ int addVmExpr(VmExprList *l, enum CmdType cmd, enum SegType seg, int val, char *
 
 void push(FILE *fp, VmExpr *n){
 	if(n->seg == SEG_CONST){
-		sprintf(line, "@%d\nD=A\n", n->val);
-		fwrite(line, strlen(line), 1, fp);
+		sprintf(BLine, "@%d\nD=A\n", n->val);
+		fwrite(BLine, strlen(BLine), 1, fp);
 	}else{	
 		if(n->seg == SEG_PTR){
-			sprintf(line, "@%d\nD=A\n", SEG_THIS);
-			fwrite(line, strlen(line), 1, fp);
+			sprintf(BLine, "@%d\nD=A\n", SEG_THIS);
+			fwrite(BLine, strlen(BLine), 1, fp);
 		}else if(n->seg == SEG_TEMP){
-			sprintf(line, "@%d\nD=A\n", n->seg);
-			fwrite(line, strlen(line), 1, fp);
+			sprintf(BLine, "@%d\nD=A\n", n->seg);
+			fwrite(BLine, strlen(BLine), 1, fp);
 		}else{
-			sprintf(line, "@%d\nD=M\n", n->seg);
-			fwrite(line, strlen(line), 1, fp);
+			sprintf(BLine, "@%d\nD=M\n", n->seg);
+			fwrite(BLine, strlen(BLine), 1, fp);
 		}
 
 		if(n->val != 0){
-			sprintf(line, "@%d\nA=D+A\n", n->val);
-			fwrite(line, strlen(line), 1, fp);
+			sprintf(BLine, "@%d\nA=D+A\n", n->val);
+			fwrite(BLine, strlen(BLine), 1, fp);
 		}else{
-			sprintf(line, "A=D\n");
-			fwrite(line, strlen(line), 1, fp);
+			sprintf(BLine, "A=D\n");
+			fwrite(BLine, strlen(BLine), 1, fp);
 		}
 
-		sprintf(line, "D=M\n");
-		fwrite(line, strlen(line), 1, fp);
+		sprintf(BLine, "D=M\n");
+		fwrite(BLine, strlen(BLine), 1, fp);
 	}
 
-	sprintf(line, "@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void pop(FILE *fp, VmExpr *n){
 	if(n->seg == SEG_TEMP){
-		sprintf(line, "@%d\nD=A\n", n->seg);
-		fwrite(line, strlen(line), 1, fp);
+		sprintf(BLine, "@%d\nD=A\n", n->seg);
+		fwrite(BLine, strlen(BLine), 1, fp);
 	}else if(n->seg == SEG_PTR){
-		sprintf(line, "@%d\nD=A\n", SEG_THIS);
-		fwrite(line, strlen(line), 1, fp);
+		sprintf(BLine, "@%d\nD=A\n", SEG_THIS);
+		fwrite(BLine, strlen(BLine), 1, fp);
 	}else{
-		sprintf(line, "@%d\nD=M\n", n->seg);
-		fwrite(line, strlen(line), 1, fp);
+		sprintf(BLine, "@%d\nD=M\n", n->seg);
+		fwrite(BLine, strlen(BLine), 1, fp);
 	}
 
 	if(n->val != 0){
-		sprintf(line, "@%d\nD=D+A\n", n->val);
-		fwrite(line, strlen(line), 1, fp);
+		sprintf(BLine, "@%d\nD=D+A\n", n->val);
+		fwrite(BLine, strlen(BLine), 1, fp);
 	}
 
-	sprintf(line, "@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@R13\nM=D\n@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void set(FILE *fp, VmExpr *n){
-	sprintf(line, "@%d\nD=A\n@%d\nM=D\n", n->val, n->seg);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%d\nD=A\n@%d\nM=D\n", n->val, n->seg);
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void end(FILE *fp, VmExpr *n){
-	sprintf(line, "(EXIT)\n@EXIT\n0;JMP\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(EXIT)\n@EXIT\n0;JMP\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void add(FILE *fp, VmExpr *n){
 	pop2(fp);
 
-	sprintf(line, "D=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "D=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void sub(FILE *fp, VmExpr *n){
 	pop2(fp);
 
-	sprintf(line, "D=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "D=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void mult(FILE *fp, VmExpr *n){
 	static int multN = 0;
 
-	sprintf(line, "@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "@SP\nA=M-1\nM=-M\n@2\nD=A\n@SP\nA=M-D\nM=-M\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nA=M-1\nM=-M\n@2\nD=A\n@SP\nA=M-D\nM=-M\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "(END_IF_MULT_%d)\n@SP\nA=M\nM=0\n", multN);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(END_IF_MULT_%d)\n@SP\nA=M\nM=0\n", multN);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "(START_LOOP_MULT_%d)\n", multN);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(START_LOOP_MULT_%d)\n", multN);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "@SP\nA=M-1\nD=M\n@END_LOOP_MULT_%d\nD;JLE\n", multN);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nA=M-1\nD=M\n@END_LOOP_MULT_%d\nD;JLE\n", multN);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "@2\nD=A\n@SP\nA=M-D\nD=M\n@SP\nA=M\nM=M+D\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@2\nD=A\n@SP\nA=M-D\nD=M\n@SP\nA=M\nM=M+D\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "@SP\nA=M-1\nM=M-1\n@START_LOOP_MULT_%d\n0;JMP\n", multN);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nA=M-1\nM=M-1\n@START_LOOP_MULT_%d\n0;JMP\n", multN);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "(END_LOOP_MULT_%d)\n@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n", multN);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(END_LOOP_MULT_%d)\n@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n", multN);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
 	multN++;
 }
@@ -497,8 +497,8 @@ void divi(FILE *fp, VmExpr *n){
 }
 
 void neg(FILE *fp, VmExpr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nM=-M\n@SP\nM=M+1\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nM=M-1\nA=M\nM=-M\n@SP\nM=M+1\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void eq(FILE *fp, VmExpr *n){
@@ -506,17 +506,17 @@ void eq(FILE *fp, VmExpr *n){
 
 	pop2(fp);
 
-	sprintf(line, "D=M-D\n@IF_EQ_%d\nD;JEQ\n@SP\nA=M\nM=0\n", eq);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "D=M-D\n@IF_EQ_%d\nD;JEQ\n@SP\nA=M\nM=0\n", eq);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "@END_IF_EQ_%d\n0;JMP\n", eq);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@END_IF_EQ_%d\n0;JMP\n", eq);
+	fwrite(BLine, strlen(BLine), 1, fp);
         
-	sprintf(line, "(IF_EQ_%d)\n@SP\nA=M\nM=-1\n", eq);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(IF_EQ_%d)\n@SP\nA=M\nM=-1\n", eq);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "(END_IF_EQ_%d)\n@SP\nM=M+1\n", eq);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(END_IF_EQ_%d)\n@SP\nM=M+1\n", eq);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
 	eq++;
 }
@@ -526,17 +526,17 @@ void gt(FILE *fp, VmExpr *n){
 	
 	pop2(fp);
 
-	sprintf(line, "D=M-D\n@IF_GT_%d\nD;JGT\n@SP\nA=M\nM=0\n", gt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "D=M-D\n@IF_GT_%d\nD;JGT\n@SP\nA=M\nM=0\n", gt);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "@END_IF_GT_%d\n0;JMP\n", gt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@END_IF_GT_%d\n0;JMP\n", gt);
+	fwrite(BLine, strlen(BLine), 1, fp);
         
-	sprintf(line, "(IF_GT_%d)\n@SP\nA=M\nM=-1\n", gt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(IF_GT_%d)\n@SP\nA=M\nM=-1\n", gt);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "(END_IF_GT_%d)\n@SP\nM=M+1\n", gt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(END_IF_GT_%d)\n@SP\nM=M+1\n", gt);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
 	gt++;
 }
@@ -546,17 +546,17 @@ void lt(FILE *fp, VmExpr *n){
 
 	pop2(fp);
 
-	sprintf(line, "D=M-D\n@IF_LT_%d\nD;JLT\n@SP\nA=M\nM=0\n", lt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "D=M-D\n@IF_LT_%d\nD;JLT\n@SP\nA=M\nM=0\n", lt);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "@END_IF_LT_%d\n0;JMP\n", lt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@END_IF_LT_%d\n0;JMP\n", lt);
+	fwrite(BLine, strlen(BLine), 1, fp);
         
-	sprintf(line, "(IF_LT_%d)\n@SP\nA=M\nM=-1\n", lt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(IF_LT_%d)\n@SP\nA=M\nM=-1\n", lt);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
-	sprintf(line, "(END_IF_LT_%d)\n@SP\nM=M+1\n", lt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(END_IF_LT_%d)\n@SP\nM=M+1\n", lt);
+	fwrite(BLine, strlen(BLine), 1, fp);
 
 	lt++;
 }
@@ -564,29 +564,29 @@ void lt(FILE *fp, VmExpr *n){
 void and(FILE *fp, VmExpr *n){
 	pop2(fp);
 
-	sprintf(line, "D=D&M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "D=D&M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void or(FILE *fp, VmExpr *n){
 	pop2(fp);
 
-	sprintf(line, "D=D|M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "D=D|M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void not(FILE *fp, VmExpr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nM=!M\n@SP\nM=M+1\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nM=M-1\nA=M\nM=!M\n@SP\nM=M+1\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void func(FILE *fp, VmExpr *n){
 	int i;
-	sprintf(line, "(%s)\n", n->name);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(%s)\n", n->name);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	for(i = 0; i < n->val; i++){
-		sprintf(line, "@0\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-		fwrite(line, strlen(line), 1, fp);
+		sprintf(BLine, "@0\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
+		fwrite(BLine, strlen(BLine), 1, fp);
 	}
 }
 
@@ -594,84 +594,84 @@ void call(FILE *fp, VmExpr *n){
 	static int cnt = 0;
 	
 	// Push RET ADDR
-	sprintf(line, "@RET_ADDR_%d\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", cnt);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@RET_ADDR_%d\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", cnt);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// Push LCL
-	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_LCL);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_LCL);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// Push ARG
-	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_ARG);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_ARG);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// Push THIS
-	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_THIS);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_THIS);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// Push THAT
-	sprintf(line, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_THAT);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", SEG_THAT);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// ARG = SP - 5 - n
-	sprintf(line, "@SP\nD=M\n@%d\nD=D-A\n@%d\nM=D\n", 5 + n->val, SEG_ARG);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nD=M\n@%d\nD=D-A\n@%d\nM=D\n", 5 + n->val, SEG_ARG);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// LCL = SP
-	sprintf(line, "@SP\nD=M\n@%d\nM=D\n", SEG_LCL);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nD=M\n@%d\nM=D\n", SEG_LCL);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	go2(fp, n);
 	// Print return label
-	sprintf(line, "(RET_ADDR_%d)\n", cnt++);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(RET_ADDR_%d)\n", cnt++);
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void ret(FILE *fp, VmExpr *n){
 	// FRAME = LCL
-	sprintf(line, "@%d\nD=M\n@R14\nM=D\n", SEG_LCL);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%d\nD=M\n@R14\nM=D\n", SEG_LCL);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// RET = *(FRAME - 5)
-	sprintf(line, "@R14\nD=M\n@5\nA=D-A\nD=M\n@R15\nM=D\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@R14\nD=M\n@5\nA=D-A\nD=M\n@R15\nM=D\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// *ARG = pop()
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@%d\nA=M\nM=D\n", SEG_ARG);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nM=M-1\nA=M\nD=M\n@%d\nA=M\nM=D\n", SEG_ARG);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// SP = ARG + 1
-	sprintf(line, "@%d\nD=M+1\n@SP\nM=D\n", SEG_ARG);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%d\nD=M+1\n@SP\nM=D\n", SEG_ARG);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// THAT = *(FRAME - 1)
-	sprintf(line, "@R14\nD=M\n@1\nA=D-A\nD=M\n@%d\nM=D\n", SEG_THAT);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@R14\nD=M\n@1\nA=D-A\nD=M\n@%d\nM=D\n", SEG_THAT);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// THIS = *(FRAME - 2)
-	sprintf(line, "@R14\nD=M\n@2\nA=D-A\nD=M\n@%d\nM=D\n", SEG_THIS);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@R14\nD=M\n@2\nA=D-A\nD=M\n@%d\nM=D\n", SEG_THIS);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// ARG = *(FRAME - 3)
-	sprintf(line, "@R14\nD=M\n@3\nA=D-A\nD=M\n@%d\nM=D\n", SEG_ARG);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@R14\nD=M\n@3\nA=D-A\nD=M\n@%d\nM=D\n", SEG_ARG);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// LCL = *(FRAME - 4)
-	sprintf(line, "@R14\nD=M\n@4\nA=D-A\nD=M\n@%d\nM=D\n", SEG_LCL);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@R14\nD=M\n@4\nA=D-A\nD=M\n@%d\nM=D\n", SEG_LCL);
+	fwrite(BLine, strlen(BLine), 1, fp);
 	// goto RET
-	sprintf(line, "@R15\nA=M\n0;JMP\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@R15\nA=M\n0;JMP\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void ifgt(FILE *fp, VmExpr *n){
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@%s\nD;JNE\n", n->name);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nM=M-1\nA=M\nD=M\n@%s\nD;JNE\n", n->name);
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void go2(FILE *fp, VmExpr *n){
-	sprintf(line, "@%s\n0;JMP\n", n->name);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%s\n0;JMP\n", n->name);
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void label(FILE *fp, VmExpr *n){
-	sprintf(line, "(%s)\n", n->name);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "(%s)\n", n->name);
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void pushString(FILE *fp, char *s){
-	sprintf(line, "@%s\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", s);
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@%s\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", s);
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 
 void pop2(FILE *fp){
-	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\n");
-	fwrite(line, strlen(line), 1, fp);
+	sprintf(BLine, "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\n");
+	fwrite(BLine, strlen(BLine), 1, fp);
 }
 

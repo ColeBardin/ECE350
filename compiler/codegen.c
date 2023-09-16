@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+
 #include "codegen.h"
 
 char FLine[128];
 VarList *VarL;
 TokNode *currentTok;
-KeyVal allToks[] = {
+
+KeyVal frontEndToks[] = {
 	{"+", PLUS},
 	{"-", MINUS},
 	{"*", MULT},
@@ -102,7 +104,7 @@ int getVarOrInt(FILE *fp, char *dest, int size){
 	int nToks, i, n;
 
 	i = 1;
-	nToks = sizeof(allToks) / sizeof(KeyVal);
+	nToks = sizeof(frontEndToks) / sizeof(KeyVal);
 
 	while((c = fgetc(fp)) != EOF){
 		if(c == ' ' || c == '\t' || c == '\n' || c == '\r'){
@@ -110,7 +112,7 @@ int getVarOrInt(FILE *fp, char *dest, int size){
 			return i;
 		}else{
 			for(n = 0; n < nToks; n++){
-				if(c == allToks[n].key[0]){
+				if(c == frontEndToks[n].key[0]){
 					fseek(fp, -1L, SEEK_CUR);
 					dest[i] = '\0';
 					return i;
@@ -281,15 +283,15 @@ int scan(FILE *fp, TokList *list){
 	int nToks, i;
 
 	puts("Scanning for tokens");
-	nToks = sizeof(allToks) / sizeof(KeyVal);
+	nToks = sizeof(frontEndToks) / sizeof(KeyVal);
 
 	while((c = fgetc(fp)) != EOF){
 		if(c == ' ' || c == '\t' || c == '\n' || c == '\r'){
 			continue;
 		}else{
 			for(i = 0; i < nToks; i++){
-				if(c == allToks[i].key[0]){
-					addTok(list, allToks[i].val, allToks[i].key);
+				if(c == frontEndToks[i].key[0]){
+					addTok(list, frontEndToks[i].val, frontEndToks[i].key);
 					break;
 				}
 			}
