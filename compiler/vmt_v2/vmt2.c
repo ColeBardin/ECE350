@@ -313,9 +313,7 @@ void procToks(int tokc, char **toks, ExprList *l){
 		default:
 			break;
 	}
-	if(cmd == CMD_PUSH){
-		printf("pushing: %d\n", val);
-	}	
+
 	addExpr(l, cmd, seg, val, p);
 }
 
@@ -465,7 +463,7 @@ void sub(FILE *fp, Expr *n){
 void mult(FILE *fp, Expr *n){
 	static int multN = 0;
 
-	sprintf(line, "//MULT\n@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
+	sprintf(line, "@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
 	fwrite(line, strlen(line), 1, fp);
 
 	sprintf(line, "@SP\nA=M-1\nM=-M\n@2\nD=A\n@SP\nA=M-D\nM=-M\n");
@@ -486,14 +484,18 @@ void mult(FILE *fp, Expr *n){
 	sprintf(line, "@SP\nA=M-1\nM=M-1\n@START_LOOP_MULT_%d\n0;JMP\n", multN);
 	fwrite(line, strlen(line), 1, fp);
 
-	sprintf(line, "(END_LOOP_MULT_%d)\n@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n", multN++);
+	sprintf(line, "(END_LOOP_MULT_%d)\n@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n", multN);
 	fwrite(line, strlen(line), 1, fp);
+
+	multN++;
 }
 
 void divi(FILE *fp, Expr *n){
 	static int divN = 0;
 
 	// TODO: write signed division
+
+	divN++;
 }
 
 void neg(FILE *fp, Expr *n){
