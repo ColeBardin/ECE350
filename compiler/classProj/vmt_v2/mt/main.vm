@@ -1,0 +1,8 @@
+function main 1
+push constant 5
+push constant 4
+push constant 3
+mult
+mult
+pop local 0
+return

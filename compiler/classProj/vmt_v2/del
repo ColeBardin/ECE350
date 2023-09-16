@@ -1,0 +1,30 @@
+SMULT logic: x * y
+
+Func enter:
+Stack:
+...
+x
+y
+[new] ret <-SP
+
+1) ret<-SP 
+If y >= 0: GOTO 2
+Else:
+y = -y
+x = -x
+ret<-SP
+
+2) (END_IF_MULT_N)
+ret = 0 // result above x and y on stack
+
+3) (START_LOOP_MULT_N)
+If y <= 0: GOTO 4
+Else:
+ret += x
+y --
+set ret<-SP
+GOTO 3
+
+4) (END_LOOP_MULT_N)
+x = ret
+y<-SP

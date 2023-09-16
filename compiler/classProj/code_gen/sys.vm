@@ -1,0 +1,4 @@
+function init 0
+set sp 256
+call main 0
+end
