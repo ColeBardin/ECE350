@@ -170,4 +170,3 @@ void doMult(FILE *fp);
 void doDiv(FILE *fp);
 void doInt(FILE *fp, int num);
 void doVar(FILE *fp, char *var);
-

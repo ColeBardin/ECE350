@@ -4,9 +4,9 @@
 #include <string.h>
 #include "codegen.h"
 
-char line[128];
+char FLine[128];
 VarList *VarL;
-TokNode *current;
+TokNode *currentTok;
 KeyVal allToks[] = {
 	{"+", PLUS},
 	{"-", MINUS},
@@ -325,7 +325,7 @@ AST *parse(TokList *list){
 		return NULL;
 	}
 
-	current = list->head;
+	currentTok = list->head;
 
 	new = malloc(sizeof(AST));
 	if(new == NULL){
@@ -426,10 +426,10 @@ Statement *statement(){
 	s->cs = NULL;
 	s->as = NULL;
 
-	if(current->tok == LCURLY){
+	if(currentTok->tok == LCURLY){
 		s->type = CMP_STATE;
 		s->cs = compoundStatement();
-	}else if(current->tok == ID){
+	}else if(currentTok->tok == ID){
 		s->type = ASSGN_STATE;
 		s->as = assignmentStatement();
 	}else{
@@ -447,7 +447,7 @@ AssignmentStatement *assignmentStatement(){
 		perror("Assignment Statement\n");
 		return NULL;
 	}
-	strncpy(a->lval, current->name, 64);
+	strncpy(a->lval, currentTok->name, 64);
 	if(!consume(ID)){
 		fprintf(stderr, "Expected variable\n");
 		return NULL;
@@ -484,12 +484,12 @@ Expression *expression(){
 		return NULL;
 	}
 
-	if(current->tok == PLUS){
+	if(currentTok->tok == PLUS){
 		e->op = OP_PLUS;
 		consume(PLUS);
 		e->e = expression();
 		if(e->e == NULL) return NULL;
-	}else if(current->tok == MINUS){
+	}else if(currentTok->tok == MINUS){
 		e->op = OP_MINUS;	
 		consume(MINUS);
 		e->e = expression();
@@ -512,12 +512,12 @@ Term *term(){
 	}
 	
 	t->f = factor();
-	if(current->tok == MULT){
+	if(currentTok->tok == MULT){
 		t->op = OP_MULT;
 		consume(MULT);
 		t->t = term();
 		if(t->t == NULL) return NULL;
-	}else if(current->tok == DIV){
+	}else if(currentTok->tok == DIV){
 		t->op = OP_DIV;
 		consume(DIV);
 		if(t->t == NULL) return NULL;
@@ -542,7 +542,7 @@ Factor *factor(){
 	f->op = OP_NULL;
 	f->f = NULL;
 
-	switch(current->tok){
+	switch(currentTok->tok){
 		case LPAREN:
 			consume(LPAREN);
 
@@ -576,12 +576,12 @@ Factor *factor(){
 			break;
 		case INT:
 			f->type = D_INT;
-			strncpy(f->data, current->name, 64);
+			strncpy(f->data, currentTok->name, 64);
 			consume(INT);
 			break;
 		case ID:
 			f->type = D_VAR;
-			strncpy(f->data, current->name, 64);
+			strncpy(f->data, currentTok->name, 64);
 			consume(ID);
 			break;
 		default:
@@ -593,11 +593,11 @@ Factor *factor(){
 }
 
 int consume(enum TokType type){
-	if(current->tok != type){
+	if(currentTok->tok != type){
 		fprintf(stderr, "Syntax Error\n");
 		return 0;
 	}
-	current = current->next;
+	currentTok = currentTok->next;
 	return 1;
 }
 
@@ -676,8 +676,8 @@ int generateVM(char *fn, char *prog, AST *ast){
 		return -1;
 	}
 
-	snprintf(line, 128, "function %s %d\n", prog, getVarCount(VarL));
-	fwrite(line, strlen(line), 1, fp);
+	snprintf(FLine, 128, "function %s %d\n", prog, getVarCount(VarL));
+	fwrite(FLine, strlen(FLine), 1, fp);
 	visitCompoundStatement(ast->p->cs, fp);
 	fputs("return\n", fp);
 	
@@ -779,8 +779,8 @@ int setupVM(char *prog){
 }
 
 void popVar(FILE *fp, char *var){
-	snprintf(line, 128, "pop local %d\n", isVar(VarL, var));
-	fwrite(line, strlen(line), 1, fp);
+	snprintf(FLine, 128, "pop local %d\n", isVar(VarL, var));
+	fwrite(FLine, strlen(FLine), 1, fp);
 }
 
 void doAdd(FILE *fp){
@@ -800,12 +800,12 @@ void doDiv(FILE *fp){
 }
 
 void doInt(FILE *fp, int num){
-	snprintf(line, 128, "push constant %d\n", num);
-	fwrite(line, strlen(line), 1, fp);
+	snprintf(FLine, 128, "push constant %d\n", num);
+	fwrite(FLine, strlen(FLine), 1, fp);
 }
 
 void doVar(FILE *fp, char *var){
-	snprintf(line, 128, "push local %d\n", isVar(VarL, var));
-	fwrite(line, strlen(line), 1, fp);
+	snprintf(FLine, 128, "push local %d\n", isVar(VarL, var));
+	fwrite(FLine, strlen(FLine), 1, fp);
 }
 

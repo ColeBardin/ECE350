@@ -9,31 +9,31 @@
 #define MAXTOKS 256
 #define BIN16_TO_15(x) (x & 0x7FFF)
 
-void push(FILE *fp, Expr *n);
-void pop(FILE *fp, Expr *n);
-void set(FILE *fp, Expr *n);
-void end(FILE *fp, Expr *n);
-void add(FILE *fp, Expr *n);
-void sub(FILE *fp, Expr *n);
-void mult(FILE *fp, Expr *n);
-void divi(FILE *fp, Expr *n);
-void neg(FILE *fp, Expr *n);
-void eq(FILE *fp, Expr *n);
-void gt(FILE *fp, Expr *n);
-void lt(FILE *fp, Expr *n);
-void and(FILE *fp, Expr *n);
-void or(FILE *fp, Expr *n);
-void not(FILE *fp, Expr *n);
-void func(FILE *fp, Expr *n);
-void call(FILE *fp, Expr *n);
-void ret(FILE *fp, Expr *n);
-void ifgt(FILE *fp, Expr *n);
-void go2(FILE *fp, Expr *n);
-void label(FILE *fp, Expr *n);
+void push(FILE *fp, VmExpr *n);
+void pop(FILE *fp, VmExpr *n);
+void set(FILE *fp, VmExpr *n);
+void end(FILE *fp, VmExpr *n);
+void add(FILE *fp, VmExpr *n);
+void sub(FILE *fp, VmExpr *n);
+void mult(FILE *fp, VmExpr *n);
+void divi(FILE *fp, VmExpr *n);
+void neg(FILE *fp, VmExpr *n);
+void eq(FILE *fp, VmExpr *n);
+void gt(FILE *fp, VmExpr *n);
+void lt(FILE *fp, VmExpr *n);
+void and(FILE *fp, VmExpr *n);
+void or(FILE *fp, VmExpr *n);
+void not(FILE *fp, VmExpr *n);
+void func(FILE *fp, VmExpr *n);
+void call(FILE *fp, VmExpr *n);
+void ret(FILE *fp, VmExpr *n);
+void ifgt(FILE *fp, VmExpr *n);
+void go2(FILE *fp, VmExpr *n);
+void label(FILE *fp, VmExpr *n);
 void pushString(FILE *fp, char *s);
 void pop2(FILE *fp);
 
-KeyVal ops[] = {
+KeyVal vmOps[] = {
 	{"push", CMD_PUSH},
 	{"pop", CMD_POP},	
 	{"set", CMD_SET},	
@@ -57,7 +57,7 @@ KeyVal ops[] = {
 	{"label", CMD_LBL},	
 };
 
-KeyVal segs[] = {
+KeyVal vmSegs[] = {
 	{"sp", SEG_SP},
 	{"local", SEG_LCL},
 	{"argument", SEG_ARG},
@@ -69,7 +69,7 @@ KeyVal segs[] = {
 	{"constant", SEG_CONST},
 };
 
-void (* cmds[])(FILE *fp, Expr *n) = {
+void (* vmCmds[])(FILE *fp, VmExpr *n) = {
 	&push,
 	&pop,
 	&set,
@@ -102,8 +102,6 @@ int main(int argc, char **argv){
 	char *dir;
 	char files[64][64];
 	int i, nFiles;
-	ExprList *exprList;
-	Expr *expr;
 	struct dirent *dp;
 	DIR *dfd;
 
@@ -143,11 +141,11 @@ int main(int argc, char **argv){
 		}
 	}
 
-	translateFile(dir, "sys.vm");
-	translateFile(dir, "main.vm");
+	translateVmFile(dir, "sys.vm");
+	translateVmFile(dir, "main.vm");
 
 	for(i=0; i < nFiles; i++){
-		translateFile(dir, files[i]);
+		translateVmFile(dir, files[i]);
 	}
 
 	strcpy(fn, argv[1]);
@@ -203,9 +201,9 @@ void assembleFinal(char *fno, char *dir, char files[64][64], int nfiles){
 	fclose(fpo);
 }
 
-void translateFile(char *dir, char *file){
+void translateVmFile(char *dir, char *file){
 	FILE *fp;
-	ExprList *exprList;
+	VmExprList *exprList;
 	char *p;
 	char fn[64];
 	
@@ -217,27 +215,27 @@ void translateFile(char *dir, char *file){
 		perror("");
 		exit(1);
 	}
-	exprList = newExprList();
-	parse(exprList, fp);
+	exprList = newVmExprList();
+	parseVmCode(exprList, fp);
 	fclose(fp);
 
 	p = strrchr(fn, '.');
 	strcpy(p, ".i");
 	fp = fopen(fn, "w");
-	writeExprs(fp, exprList);
+	writeVmExprs(fp, exprList);
 	fclose(fp);
-	deleteExprList(exprList);
+	deleteVmExprList(exprList);
 }
 
-void writeExprs(FILE *fp, ExprList *l){
-	Expr *n;
+void writeVmExprs(FILE *fp, VmExprList *l){
+	VmExpr *n;
 
 	for(n = l->head; n != NULL; n = n->next){
-		cmds[n->cmd](fp, n);
+		vmCmds[n->cmd](fp, n);
 	}
 }
 
-void parse(ExprList *l, FILE *fp){
+void parseVmCode(VmExprList *l, FILE *fp){
 	char buf[BUFSIZE];
 	char *p, *c;
 	char *toks[MAXTOKS];
@@ -260,30 +258,30 @@ void parse(ExprList *l, FILE *fp){
 		c = strchr(p, '/');
 		if(c != NULL) *c = '\0';
 		
-		n = tokenize(p, toks, " \t", MAXTOKS);
+		n = tokenizeVmLine(p, toks, " \t", MAXTOKS);
 		if(n == 0 || (n == 1 && toks[0] == NULL)) continue;
-		procToks(n, toks, l);
+		processVmToks(n, toks, l);
 	}
 	
 }
 
-void procToks(int tokc, char **toks, ExprList *l){
+void processVmToks(int tokc, char **toks, VmExprList *l){
 	KeyVal op;
 	int i;
 	enum CmdType cmd;
 	enum SegType seg;
 	uint16_t val;
 	char *p;
-	static int nOps = sizeof(ops) / sizeof(KeyVal);
-	static int nSegs = sizeof(segs) / sizeof(KeyVal);
+	static int nOps = sizeof(vmOps) / sizeof(KeyVal);
+	static int nSegs = sizeof(vmSegs) / sizeof(KeyVal);
 
 	seg = SEG_NULL;
 	val = 0;
 	p = NULL;
 
 	for(i = 0; i < nOps; i++){
-		if(!strcmp(toks[0], ops[i].key)){
-			cmd = ops[i].val;
+		if(!strcmp(toks[0], vmOps[i].key)){
+			cmd = vmOps[i].val;
 			break;
 		}
 	}	
@@ -293,8 +291,8 @@ void procToks(int tokc, char **toks, ExprList *l){
 		case CMD_POP:
 		case CMD_SET:
 			for(i = 0; i < nSegs; i++){
-				if(!strcmp(toks[1], segs[i].key)){
-					seg = segs[i].val;
+				if(!strcmp(toks[1], vmSegs[i].key)){
+					seg = vmSegs[i].val;
 					val = BIN16_TO_15(atoi(toks[2]));
 					break;
 				}
@@ -314,10 +312,10 @@ void procToks(int tokc, char **toks, ExprList *l){
 			break;
 	}
 
-	addExpr(l, cmd, seg, val, p);
+	addVmExpr(l, cmd, seg, val, p);
 }
 
-int tokenize(char *s, char *toks[], char *delim, int max){
+int tokenizeVmLine(char *s, char *toks[], char *delim, int max){
 	int i;
 
 	i = 0;
@@ -332,9 +330,9 @@ int tokenize(char *s, char *toks[], char *delim, int max){
 	return i;
 }
 
-ExprList *newExprList(){
-	ExprList *l;
-	l = malloc(sizeof(ExprList));
+VmExprList *newVmExprList(){
+	VmExprList *l;
+	l = malloc(sizeof(VmExprList));
 	if(l == NULL){
 		return NULL;
 	}
@@ -344,8 +342,8 @@ ExprList *newExprList(){
 	return l;
 }
 
-int deleteExprList(ExprList *l){
-	Expr *p, *n;
+int deleteVmExprList(VmExprList *l){
+	VmExpr *p, *n;
 	int i;
 
 	if(l == NULL) return -1;
@@ -357,12 +355,12 @@ int deleteExprList(ExprList *l){
 	return i;
 }
 
-int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name){
-	Expr *new, *p;
+int addVmExpr(VmExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name){
+	VmExpr *new, *p;
 
 	if(l == NULL) return -1;
 	
-	new = malloc(sizeof(Expr));
+	new = malloc(sizeof(VmExpr));
 	if(new == NULL){
 		return -2;
 	}
@@ -383,7 +381,7 @@ int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name
 	return 0;
 }
 
-void push(FILE *fp, Expr *n){
+void push(FILE *fp, VmExpr *n){
 	if(n->seg == SEG_CONST){
 		sprintf(line, "@%d\nD=A\n", n->val);
 		fwrite(line, strlen(line), 1, fp);
@@ -415,7 +413,7 @@ void push(FILE *fp, Expr *n){
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void pop(FILE *fp, Expr *n){
+void pop(FILE *fp, VmExpr *n){
 	if(n->seg == SEG_TEMP){
 		sprintf(line, "@%d\nD=A\n", n->seg);
 		fwrite(line, strlen(line), 1, fp);
@@ -436,31 +434,31 @@ void pop(FILE *fp, Expr *n){
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void set(FILE *fp, Expr *n){
+void set(FILE *fp, VmExpr *n){
 	sprintf(line, "@%d\nD=A\n@%d\nM=D\n", n->val, n->seg);
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void end(FILE *fp, Expr *n){
+void end(FILE *fp, VmExpr *n){
 	sprintf(line, "(EXIT)\n@EXIT\n0;JMP\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void add(FILE *fp, Expr *n){
+void add(FILE *fp, VmExpr *n){
 	pop2(fp);
 
 	sprintf(line, "D=M+D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void sub(FILE *fp, Expr *n){
+void sub(FILE *fp, VmExpr *n){
 	pop2(fp);
 
 	sprintf(line, "D=M-D\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void mult(FILE *fp, Expr *n){
+void mult(FILE *fp, VmExpr *n){
 	static int multN = 0;
 
 	sprintf(line, "@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
@@ -490,7 +488,7 @@ void mult(FILE *fp, Expr *n){
 	multN++;
 }
 
-void divi(FILE *fp, Expr *n){
+void divi(FILE *fp, VmExpr *n){
 	static int divN = 0;
 
 	// TODO: write signed division
@@ -498,12 +496,12 @@ void divi(FILE *fp, Expr *n){
 	divN++;
 }
 
-void neg(FILE *fp, Expr *n){
+void neg(FILE *fp, VmExpr *n){
 	sprintf(line, "@SP\nM=M-1\nA=M\nM=-M\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void eq(FILE *fp, Expr *n){
+void eq(FILE *fp, VmExpr *n){
 	static int eq = 0;
 
 	pop2(fp);
@@ -523,7 +521,7 @@ void eq(FILE *fp, Expr *n){
 	eq++;
 }
 
-void gt(FILE *fp, Expr *n){
+void gt(FILE *fp, VmExpr *n){
 	static int gt = 0;
 	
 	pop2(fp);
@@ -543,7 +541,7 @@ void gt(FILE *fp, Expr *n){
 	gt++;
 }
 
-void lt(FILE *fp, Expr *n){
+void lt(FILE *fp, VmExpr *n){
 	static int lt = 0;
 
 	pop2(fp);
@@ -563,26 +561,26 @@ void lt(FILE *fp, Expr *n){
 	lt++;
 }
 
-void and(FILE *fp, Expr *n){
+void and(FILE *fp, VmExpr *n){
 	pop2(fp);
 
 	sprintf(line, "D=D&M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void or(FILE *fp, Expr *n){
+void or(FILE *fp, VmExpr *n){
 	pop2(fp);
 
 	sprintf(line, "D=D|M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void not(FILE *fp, Expr *n){
+void not(FILE *fp, VmExpr *n){
 	sprintf(line, "@SP\nM=M-1\nA=M\nM=!M\n@SP\nM=M+1\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void func(FILE *fp, Expr *n){
+void func(FILE *fp, VmExpr *n){
 	int i;
 	sprintf(line, "(%s)\n", n->name);
 	fwrite(line, strlen(line), 1, fp);
@@ -592,7 +590,7 @@ void func(FILE *fp, Expr *n){
 	}
 }
 
-void call(FILE *fp, Expr *n){
+void call(FILE *fp, VmExpr *n){
 	static int cnt = 0;
 	
 	// Push RET ADDR
@@ -622,7 +620,7 @@ void call(FILE *fp, Expr *n){
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void ret(FILE *fp, Expr *n){
+void ret(FILE *fp, VmExpr *n){
 	// FRAME = LCL
 	sprintf(line, "@%d\nD=M\n@R14\nM=D\n", SEG_LCL);
 	fwrite(line, strlen(line), 1, fp);
@@ -652,17 +650,17 @@ void ret(FILE *fp, Expr *n){
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void ifgt(FILE *fp, Expr *n){
+void ifgt(FILE *fp, VmExpr *n){
 	sprintf(line, "@SP\nM=M-1\nA=M\nD=M\n@%s\nD;JNE\n", n->name);
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void go2(FILE *fp, Expr *n){
+void go2(FILE *fp, VmExpr *n){
 	sprintf(line, "@%s\n0;JMP\n", n->name);
 	fwrite(line, strlen(line), 1, fp);
 }
 
-void label(FILE *fp, Expr *n){
+void label(FILE *fp, VmExpr *n){
 	sprintf(line, "(%s)\n", n->name);
 	fwrite(line, strlen(line), 1, fp);
 }

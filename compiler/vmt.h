@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-typedef struct Expr Expr;
-typedef struct ExprList ExprList;
+typedef struct VmExpr VmExpr;
+typedef struct VmExprList VmExprList;
 typedef struct KeyVal KeyVal;
 
 enum CmdType {
@@ -43,16 +43,16 @@ enum SegType {
 	SEG_NULL,
 };
 
-struct Expr {
-	Expr *next;
+struct VmExpr {
 	enum CmdType cmd;	
 	enum SegType seg;	
 	int val;	
 	char name[64];
+	VmExpr *next;
 };
 
-struct ExprList {
-	Expr *head;
+struct VmExprList {
+	VmExpr *head;
 };
 
 struct KeyVal {
@@ -60,14 +60,13 @@ struct KeyVal {
 	int val;
 };
 
-void writeExprs(FILE *fp, ExprList *l);
-void procToks(int tokc, char **toks, ExprList *l);
-void parse(ExprList *l, FILE *fp);
-int tokenize(char *s, char *toks[], char *delim, int max);
-ExprList *newExprList();
-int deleteExprList(ExprList *l);
-int addExpr(ExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name);
-void translateFile(char *dir, char *file);
+void writeVmExprs(FILE *fp, VmExprList *l);
+void processVmToks(int tokc, char **toks, VmExprList *l);
+void parseVmCode(VmExprList *l, FILE *fp);
+int tokenizeVmLine(char *s, char *toks[], char *delim, int max);
+VmExprList *newVmExprList();
+int deleteVmExprList(VmExprList *l);
+int addVmExpr(VmExprList *l, enum CmdType cmd, enum SegType seg, int val, char *name);
+void translateVmFile(char *dir, char *file);
 void assembleFinal(char *fno, char *dir, char files[64][64], int nfiles);
 int fileAppend(FILE *dest, char *source_fn);
-
