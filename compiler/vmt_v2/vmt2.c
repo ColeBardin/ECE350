@@ -493,7 +493,7 @@ void mult(FILE *fp, Expr *n){
 void divi(FILE *fp, Expr *n){
 	static int divN = 0;
 
-	printf("doing divide\n");
+	// TODO: write signed division
 }
 
 void neg(FILE *fp, Expr *n){
