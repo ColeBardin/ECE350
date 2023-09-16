@@ -7,6 +7,7 @@
 
 #define BUFSIZE 512
 #define MAXTOKS 256
+#define BIN16_TO_15(x) (x & 0x7FFF)
 
 void push(FILE *fp, Expr *n);
 void pop(FILE *fp, Expr *n);
@@ -294,7 +295,7 @@ void procToks(int tokc, char **toks, ExprList *l){
 			for(i = 0; i < nSegs; i++){
 				if(!strcmp(toks[1], segs[i].key)){
 					seg = segs[i].val;
-					val = atoi(toks[2]);
+					val = BIN16_TO_15(atoi(toks[2]));
 					break;
 				}
 			}
@@ -312,7 +313,9 @@ void procToks(int tokc, char **toks, ExprList *l){
 		default:
 			break;
 	}
-	
+	if(cmd == CMD_PUSH){
+		printf("pushing: %d\n", val);
+	}	
 	addExpr(l, cmd, seg, val, p);
 }
 
@@ -464,18 +467,25 @@ void mult(FILE *fp, Expr *n){
 
 	sprintf(line, "//MULT\n@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
 	fwrite(line, strlen(line), 1, fp);
+
 	sprintf(line, "@SP\nA=M-1\nM=-M\n@2\nD=A\n@SP\nA=M-D\nM=-M\n");
 	fwrite(line, strlen(line), 1, fp);
+
 	sprintf(line, "(END_IF_MULT_%d)\n@SP\nA=M\nM=0\n", multN);
 	fwrite(line, strlen(line), 1, fp);
+
 	sprintf(line, "(START_LOOP_MULT_%d)\n", multN);
 	fwrite(line, strlen(line), 1, fp);
+
 	sprintf(line, "@SP\nA=M-1\nD=M\n@END_LOOP_MULT_%d\nD;JLE\n", multN);
 	fwrite(line, strlen(line), 1, fp);
+
 	sprintf(line, "@2\nD=A\n@SP\nA=M-D\nD=M\n@SP\nA=M\nM=M+D\n");
 	fwrite(line, strlen(line), 1, fp);
+
 	sprintf(line, "@SP\nA=M-1\nM=M-1\n@START_LOOP_MULT_%d\n0;JMP\n", multN);
 	fwrite(line, strlen(line), 1, fp);
+
 	sprintf(line, "(END_LOOP_MULT_%d)\n@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n", multN++);
 	fwrite(line, strlen(line), 1, fp);
 }
@@ -483,6 +493,7 @@ void mult(FILE *fp, Expr *n){
 void divi(FILE *fp, Expr *n){
 	static int divN = 0;
 
+	printf("doing divide\n");
 }
 
 void neg(FILE *fp, Expr *n){
