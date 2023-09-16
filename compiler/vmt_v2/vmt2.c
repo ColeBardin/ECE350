@@ -219,6 +219,7 @@ void translateFile(char *dir, char *file){
 	exprList = newExprList();
 	parse(exprList, fp);
 	fclose(fp);
+
 	p = strrchr(fn, '.');
 	strcpy(p, ".i");
 	fp = fopen(fn, "w");
@@ -233,6 +234,36 @@ void writeExprs(FILE *fp, ExprList *l){
 	for(n = l->head; n != NULL; n = n->next){
 		cmds[n->cmd](fp, n);
 	}
+}
+
+void parse(ExprList *l, FILE *fp){
+	char buf[BUFSIZE];
+	char *p, *c;
+	char *toks[MAXTOKS];
+	int len, i, n;
+
+	while(fgets(buf, BUFSIZE, fp) != NULL){
+		p = strchr(buf, '\n');
+		if(p != NULL) *p = '\0';
+		p = strchr(buf, '\r');
+		if(p != NULL) *p = '\0';
+		len = strlen(buf);
+		for(i = 0; i < len; i++){
+			if(buf[i] != ' ' && buf[i] != '\t'){
+				p = &buf[i];
+				break;
+			}
+		}
+		if(i == len) continue;
+		if(p[0] == '/' && p[1] == '/') continue;
+		c = strchr(p, '/');
+		if(c != NULL) *c = '\0';
+		
+		n = tokenize(p, toks, " \t", MAXTOKS);
+		if(n == 0 || (n == 1 && toks[0] == NULL)) continue;
+		procToks(n, toks, l);
+	}
+	
 }
 
 void procToks(int tokc, char **toks, ExprList *l){
@@ -283,36 +314,6 @@ void procToks(int tokc, char **toks, ExprList *l){
 	}
 	
 	addExpr(l, cmd, seg, val, p);
-}
-
-void parse(ExprList *l, FILE *fp){
-	char buf[BUFSIZE];
-	char *p, *c;
-	char *toks[MAXTOKS];
-	int len, i, n;
-
-	while(fgets(buf, BUFSIZE, fp) != NULL){
-		p = strchr(buf, '\n');
-		if(p != NULL) *p = '\0';
-		p = strchr(buf, '\r');
-		if(p != NULL) *p = '\0';
-		len = strlen(buf);
-		for(i = 0; i < len; i++){
-			if(buf[i] != ' ' && buf[i] != '\t'){
-				p = &buf[i];
-				break;
-			}
-		}
-		if(i == len) continue;
-		if(p[0] == '/' && p[1] == '/') continue;
-		c = strchr(p, '/');
-		if(c != NULL) *c = '\0';
-		
-		n = tokenize(p, toks, " \t", MAXTOKS);
-		if(n == 0 || (n == 1 && toks[0] == NULL)) continue;
-		procToks(n, toks, l);
-	}
-	
 }
 
 int tokenize(char *s, char *toks[], char *delim, int max){
@@ -466,21 +467,42 @@ void mult(FILE *fp, Expr *n){
 	// y
 	// SP
 
-	// TODO: fix
-	// SP val = 0, D<-y, go to MULT_LOOP_N if if y >= 0, SP->y
-	sprintf(line, "@SP\nA=M\nM=0\n@SP\nM=M-1\nA=M\nD=M\n@MULT_LOOP_%d\nD;JGE\n", multN);
+	// 1)
+	// If y >=0, go to END_IF_MULT_N
+	sprintf(line, "//MULT\n@SP\nA=M-1\nD=M\n@END_IF_MULT_%d\nD;JGE\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-	// y = -y, x = -x, SP->y
-	sprintf(line, "@SP\nA=M\nM=-M\n@SP\nA=M-1\nM=-M\n(MULT_LOOP_%d)\n", multN);
+	// y = -y, x = -x
+	sprintf(line, "@SP\nA=M-1\nM=-M\n@2\nD=A\n@SP\nA=M-D\nM=-M\n");
 	fwrite(line, strlen(line), 1, fp);
-	// exit if y <= 0, y--, D<-x, SP->y
-	sprintf(line, "@SP\nA=M\nD=M\n@END_MULT_LOOP_%d\nD;JLE\n@SP\nA=M\nM=M-1\n@SP\nA=M-1\nD=M\n", multN);
+
+	// 2)
+	// label, ret = 0
+	sprintf(line, "(END_IF_MULT_%d)\n@SP\nA=M\nM=0\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-	// ret = ret + x, jump to top of loop
-	sprintf(line, "@SP\nA=M+1\nM=M+A\n@MULT_LOOP_%d\n0;JMP\n", multN);
+	
+	// 3)
+	// label
+	sprintf(line, "(START_LOOP_MULT_%d)\n", multN);
 	fwrite(line, strlen(line), 1, fp);
-	// ret -> x on SP
-	sprintf(line, "(END_MULT_LOOP_%d)\n@SP\nA=M+1\nD=M\n@SP\nA=M-1\nM=D\n", multN++);
+	// put y into D reg, exit loop if y <= 0
+	sprintf(line, "@SP\nA=M-1\nD=M\n@END_LOOP_MULT_%d\nD;JLE\n", multN);
+	fwrite(line, strlen(line), 1, fp);
+	// put x into D reg
+	sprintf(line, "@2\nD=A\n@SP\nA=M-D\nD=M\n");
+	fwrite(line, strlen(line), 1, fp);
+	// ret += x
+	sprintf(line, "@SP\nA=M\nM=M+D\n");
+	fwrite(line, strlen(line), 1, fp);
+	// y--, go to top of loop
+	sprintf(line, "@SP\nA=M-1\nM=M-1\n@START_LOOP_MULT_%d\n0;JMP\n", multN);
+	fwrite(line, strlen(line), 1, fp);
+
+	// 4)
+	// label
+	sprintf(line, "(END_LOOP_MULT_%d)\n", multN++);
+	fwrite(line, strlen(line), 1, fp);
+	// x = ret, y<-SP
+	sprintf(line, "@SP\nA=M\nD=M\n@SP\nM=M-1\nA=M-1\nM=D\n");
 	fwrite(line, strlen(line), 1, fp);
 }
 
