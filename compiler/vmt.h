@@ -4,7 +4,6 @@
 
 typedef struct VmExpr VmExpr;
 typedef struct VmExprList VmExprList;
-typedef struct KeyVal KeyVal;
 
 enum CmdType {
 	CMD_PUSH = 0,
@@ -53,11 +52,6 @@ struct VmExpr {
 
 struct VmExprList {
 	VmExpr *head;
-};
-
-struct KeyVal {
-	char key[64];
-	int val;
 };
 
 void writeVmExprs(FILE *fp, VmExprList *l);

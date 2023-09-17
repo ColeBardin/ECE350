@@ -1,10 +1,7 @@
-all: frontend backend
+all: ccc 
 
-frontend: codegen.c
-	cc -o codegen codegen.c
-
-backend: vmt.c
-	cc -o vmt vmt.c
+ccc: ccc.c codegen.c vmt.c
+	cc -o ccc ccc.c codegen.c vmt.c
 
 clean:
-	rm *.o .*.swp codegen vmt
+	rm *.o .*.swp ccc

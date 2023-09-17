@@ -1,6 +1,5 @@
 #pragma once
 
-typedef struct KeyVal KeyVal;
 typedef struct TokList TokList;
 typedef struct TokNode TokNode;
 typedef struct VarList VarList;
@@ -14,6 +13,8 @@ typedef struct AssignmentStatement AssignmentStatement;
 typedef struct Expression Expression;
 typedef struct Term Term;
 typedef struct Factor Factor;
+
+VarList *VarL;
 
 enum TokType {
 	PLUS,
@@ -50,11 +51,6 @@ enum DataType {
 	D_UNARY,
 	D_INT,
 	D_VAR,
-};
-
-struct KeyVal {
-	char key[64];
-	int val;
 };
 
 struct TokList {

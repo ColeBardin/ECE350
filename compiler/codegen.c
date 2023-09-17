@@ -4,9 +4,9 @@
 #include <string.h>
 
 #include "codegen.h"
+#include "KeyVal.h"
 
 char FLine[128];
-VarList *VarL;
 TokNode *currentTok;
 
 KeyVal frontEndToks[] = {
@@ -21,83 +21,6 @@ KeyVal frontEndToks[] = {
 	{"=", ASSIGN},
 	{";", SEMI},
 };
-
-int main(int argc, char **argv){
-	char *fnin, *fnout, *p;
-	char outFunc[64];
-	FILE *fp;
-	TokList *TokL;
-	AST* ast;
-
-	if(argc < 3){
-		fprintf(stderr, "Usage: ./codegen filename.txt filename.vm\n");	
-        fprintf(stderr, "file-name.txt: file containing the source program\n");
-        fprintf(stderr, "file-name.vm: output file containing VM commands\n");
-		exit(1);
-	}
-	
-	fnin = argv[1];
-	fnout = argv[2];
-	strncpy(outFunc, fnin, 64);
-	p = strrchr(outFunc, '.');
-	if(p != NULL) *p = '\0';
-	
-	printf("Opening file: %s\n", fnin);
-	fp = fopen(fnin, "r");
-	if(fp == NULL){
-		perror("Failed to open input file");
-		exit(1);
-	}
-
-	TokL = newTokList();
-	if(TokL == NULL){
-		fprintf(stderr, "Failed to create token list\n");
-		fclose(fp);
-		exit(1);
-	}
-
-	VarL = newVarList();
-	if(VarL == NULL){
-		fprintf(stderr, "Failed to create variable list\n");
-		fclose(fp);
-		deleteTokList(TokL);
-		exit(1);
-	}
-	
-	// SCAN
-	if(scan(fp, TokL) == -1){
-		fclose(fp);
-		deleteTokList(TokL);
-		deleteVarList(VarL);
-		exit(2);
-	}
-	fclose(fp);
-	
-	// PARSE
-	ast = parse(TokL);
-	if(ast == NULL){
-		deleteTokList(TokL);
-		deleteVarList(VarL);
-		exit(2);
-	}
-	deleteTokList(TokL);
-
-	// VM OUT
-	if(setupVM(outFunc) == -1){
-		deleteAST(ast);
-		deleteVarList(VarL);
-		exit(1);
-	}
-	if(generateVM(fnout, outFunc, ast) == -1){
-		deleteAST(ast);
-		deleteVarList(VarL);
-		exit(1);
-	}
-
-	deleteVarList(VarL);
-	deleteAST(ast);
-	exit(0);
-}
 
 int getVarOrInt(FILE *fp, char *dest, int size){
 	char c;
@@ -767,6 +690,7 @@ int setupVM(char *prog){
 	fwrite(line, strlen(line), 1, fp);
 	fclose(fp);
 
+	/*
 	puts("Creating file: main.vm");
 	fp = fopen("main.vm", "w");
 	if(fp == NULL){
@@ -776,7 +700,7 @@ int setupVM(char *prog){
 	snprintf(line, 128, "function main 0\ncall %s 0\nreturn\n", prog);
 	fwrite(line, strlen(line), 1, fp);
 	fclose(fp);
-
+	*/
 	return 0;
 }
 
