@@ -26,7 +26,7 @@ int main(int argc, char **argv){
 	strcpy(fn, argv[1]);
 	p = strrchr(fn, '.');
 	if(p != NULL) *p = '\0';
-	strcpy(dir, "i_");
+	strcpy(dir, ".tmp_");
 	strcat(dir, fn);
 	mkdir(dir, 0777);
 
@@ -157,3 +157,4 @@ int backEnd(char *intermediateDir, char *AsmFn){
 
 	return 0;
 }
+
